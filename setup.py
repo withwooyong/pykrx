@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 from pykrx import __version__
+# __version__ = '1.0.51'
 
 with open("README.md", "r", encoding='UTF-8') as fh:
     long_description = fh.read()
