@@ -1,19 +1,21 @@
-from .market import *
-from .etx import *
-from .bond import *
-from .future import *
 import datetime
+from typing import cast
 
-def datetime2string(dt, freq='d'):
-    if freq.upper() == 'Y':
+from pandas import DatetimeIndex
+
+from .market.wrap import get_index_ohlcv_by_date
+
+
+def datetime2string(dt, freq="d"):
+    if freq.upper() == "Y":
         return dt.strftime("%Y")
-    elif freq.upper() == 'M':
+    elif freq.upper() == "M":
         return dt.strftime("%Y%m")
     else:
         return dt.strftime("%Y%m%d")
 
-def get_nearest_business_day_in_a_week(date: str = None, prev: bool = True) \
-        -> str:
+
+def get_nearest_business_day_in_a_week(date: str | None = None, prev: bool = True) -> str:
     """인접한 영업일을 조회한다.
 
     Args:
@@ -24,20 +26,19 @@ def get_nearest_business_day_in_a_week(date: str = None, prev: bool = True) \
     Returns:
         str: 날짜 (YYMMDD)
     """
-    if date is None:
-        curr = datetime.datetime.now()
-    else:
-        curr = datetime.datetime.strptime(date, "%Y%m%d")
+    curr = datetime.datetime.now() if date is None else datetime.datetime.strptime(date, "%Y%m%d")
 
     if prev:
-        prev = curr - datetime.timedelta(days=7)
-        curr = curr.strftime("%Y%m%d")
-        prev = prev.strftime("%Y%m%d")
-        df = get_index_ohlcv_by_date(prev, curr, "1001")
-        return df.index[-1].strftime("%Y%m%d")
+        prev_dt = curr - datetime.timedelta(days=7)
+        curr_str = curr.strftime("%Y%m%d")
+        prev_str = prev_dt.strftime("%Y%m%d")
+        df = get_index_ohlcv_by_date(prev_str, curr_str, "1001")
+        index = cast(DatetimeIndex, df.index)
+        return index[-1].strftime("%Y%m%d")  # type: ignore[attr-defined]
     else:
-        next = curr + datetime.timedelta(days=7)
-        next = next.strftime("%Y%m%d")
-        curr = curr.strftime("%Y%m%d")
-        df = get_index_ohlcv_by_date(curr, next, "1001")
-        return df.index[0].strftime("%Y%m%d")
+        next_dt = curr + datetime.timedelta(days=7)
+        next_str = next_dt.strftime("%Y%m%d")
+        curr_str = curr.strftime("%Y%m%d")
+        df = get_index_ohlcv_by_date(curr_str, next_str, "1001")
+        index = cast(DatetimeIndex, df.index)
+        return index[0].strftime("%Y%m%d")  # type: ignore[attr-defined]

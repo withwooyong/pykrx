@@ -1,17 +1,27 @@
 """
 주식 시가총액 관련 함수들
 """
+
 import datetime
-import pandas as pd
+from typing import cast
+
 from pandas import DataFrame
-from pykrx.website import krx
-from .stock_utils import regex_yymmdd, resample_ohlcv, market_valid_check
+
+from pykrx.website.krx import datetime2string
+from pykrx.website.krx.market.wrap import (
+    get_market_cap_by_date as _get_market_cap_by_date,
+)
+from pykrx.website.krx.market.wrap import (
+    get_market_cap_by_ticker as _get_market_cap_by_ticker,
+)
+
 from .stock_business_days import get_nearest_business_day_in_a_week
+from .stock_utils import market_valid_check, regex_yymmdd, resample_ohlcv
 
 
 def get_market_cap(*args, **kwargs):
     """시가총액 조회
-    
+
     Args:
         특정 종목의 지정된 기간 시가총액 조회
         fromdate (str           ): 조회 시작 일자 (YYYYMMDD)
@@ -29,14 +39,13 @@ def get_market_cap(*args, **kwargs):
         DataFrame: 시가총액 데이터
     """
     dates = list(filter(regex_yymmdd.match, [str(x) for x in args]))
-    if len(dates) == 2 or ('fromdate' in kwargs and 'todate' in kwargs):
+    if len(dates) == 2 or ("fromdate" in kwargs and "todate" in kwargs):
         return get_market_cap_by_date(*args, **kwargs)
     else:
         return get_market_cap_by_ticker(*args, **kwargs)
 
 
-def get_market_cap_by_date(
-        fromdate: str, todate: str, ticker: str, freq: str = 'd') -> DataFrame:
+def get_market_cap_by_date(fromdate: str, todate: str, ticker: str, freq: str = "d") -> DataFrame:
     """일자별로 정렬된 시가총액
 
     Args:
@@ -49,29 +58,24 @@ def get_market_cap_by_date(
         DataFrame: 시가총액 데이터
     """
     if isinstance(fromdate, datetime.datetime):
-        fromdate = krx.datetime2string(fromdate)
+        fromdate = datetime2string(fromdate)
 
     if isinstance(todate, datetime.datetime):
-        todate = krx.datetime2string(todate)
+        todate = datetime2string(todate)
 
     fromdate = fromdate.replace("-", "")
     todate = todate.replace("-", "")
 
-    df = krx.get_market_cap_by_date(fromdate, todate, ticker)
+    df = _get_market_cap_by_date(fromdate, todate, ticker)
 
-    how = {
-        '시가총액': 'last',
-        '거래량': 'sum',
-        '거래대금': 'sum',
-        '상장주식수': 'last'
-    }
-    return resample_ohlcv(df, freq, how)
+    how = {"시가총액": "last", "거래량": "sum", "거래대금": "sum", "상장주식수": "last"}
+    return cast(DataFrame, resample_ohlcv(df, freq, how))
 
 
 @market_valid_check()
 def get_market_cap_by_ticker(
-        date, market: str = "ALL", acending: bool = False,
-        alternative: bool = False) -> DataFrame:
+    date, market: str = "ALL", acending: bool = False, alternative: bool = False
+) -> DataFrame:
     """티커별로 정렬된 시가총액
 
     Args:
@@ -84,14 +88,13 @@ def get_market_cap_by_ticker(
         DataFrame: 시가총액 데이터
     """
     if isinstance(date, datetime.datetime):
-        date = krx.datetime2string(date)
+        date = datetime2string(date)
 
     date = date.replace("-", "")
 
-    df = krx.get_market_cap_by_ticker(date, market, acending)
-    holiday = (df[['종가', '시가총액', '거래량', '거래대금']] == 0) \
-        .all(axis=None)
+    df = _get_market_cap_by_ticker(date, market, acending)
+    holiday = (df[["종가", "시가총액", "거래량", "거래대금"]] == 0).all(axis=None)
     if holiday and alternative:
         target_date = get_nearest_business_day_in_a_week(date=date, prev=True)
-        df = krx.get_market_cap_by_ticker(target_date, market, acending)
+        df = _get_market_cap_by_ticker(target_date, market, acending)
     return df

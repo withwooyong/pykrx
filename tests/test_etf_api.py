@@ -1,59 +1,62 @@
-import unittest
+"""ETF API 테스트"""
+
 from pykrx import stock
 import pandas as pd
 import numpy as np
 # pylint: disable-all
 # flake8: noqa
 
-class EtfTickerList(unittest.TestCase):
+
+class TestEtfTickerList:
     def test_ticker_list(self):
         tickers = stock.get_etf_ticker_list()
-        self.assertIsInstance(tickers, list)
-        self.assertGreater(len(tickers), 0)
+        assert isinstance(tickers, list)
+        assert len(tickers) > 0
 
     def test_ticker_list_with_a_businessday(self):
         tickers = stock.get_etf_ticker_list("20210104")
-        self.assertIsInstance(tickers, list)
-        self.assertGreater(len(tickers), 0)
+        assert isinstance(tickers, list)
+        assert len(tickers) > 0
 
     def test_ticker_list_with_a_holiday(self):
         tickers = stock.get_etf_ticker_list("20210103")
-        self.assertIsInstance(tickers, list)
-        self.assertGreater(len(tickers), 0)
+        assert isinstance(tickers, list)
+        assert len(tickers) > 0
 
 
-class EtnTickerList(unittest.TestCase):
+class TestEtnTickerList:
     def test_ticker_list(self):
         tickers = stock.get_etn_ticker_list()
-        self.assertIsInstance(tickers, list)
-        self.assertGreater(len(tickers), 0)
+        assert isinstance(tickers, list)
+        assert len(tickers) > 0
 
     def test_ticker_list_with_a_businessday(self):
         tickers = stock.get_etn_ticker_list("20210104")
-        self.assertIsInstance(tickers, list)
-        self.assertGreater(len(tickers), 0)
+        assert isinstance(tickers, list)
+        assert len(tickers) > 0
 
     def test_ticker_list_with_a_holiday(self):
         tickers = stock.get_etn_ticker_list("20210103")
-        self.assertIsInstance(tickers, list)
-        self.assertGreater(len(tickers), 0)
+        assert isinstance(tickers, list)
+        assert len(tickers) > 0
 
 
-class ElwTickerList(unittest.TestCase):
+class TestElwTickerList:
     def test_ticker_list(self):
         tickers = stock.get_elw_ticker_list()
-        self.assertIsInstance(tickers, list)
-        self.assertGreater(len(tickers), 0)
+        assert isinstance(tickers, list)
+        assert len(tickers) > 0
 
     def test_ticker_list_with_a_businessday(self):
         tickers = stock.get_elw_ticker_list("20210104")
-        self.assertIsInstance(tickers, list)
+        assert isinstance(tickers, list)
 
     def test_ticker_list_with_a_holiday(self):
         tickers = stock.get_elw_ticker_list("20210103")
-        self.assertIsInstance(tickers, list)
+        assert isinstance(tickers, list)
 
-class EtfOhlcvByDate(unittest.TestCase):
+
+class TestEtfOhlcvByDate:
     def test_with_business_day(self):
         df = stock.get_etf_ohlcv_by_date("20210104", "20210108", "292340")
         #                 NAV  시가  고가  저가  종가 거래량    거래대금     기초지수
@@ -64,26 +67,26 @@ class EtfOhlcvByDate(unittest.TestCase):
         # 2021-01-07  9723.65  9845  9855  9845  9855      2       19700  1301.650024
         # 2021-01-08  9771.73  9895  9900  9855  9885      6       59320  1306.729980
         temp = df.iloc[0:5, 0] == np.array([9737.23, 9756.27, 9796.98, 9723.65, 9771.73])
-        self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
-        self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
-        self.assertTrue(df.index[0] < df.index[-1])
+        assert temp.sum() == 5
+        assert isinstance(df.index, pd.DatetimeIndex)
+        assert isinstance(df.index[0], pd.Timestamp)
+        assert df.index[0] < df.index[-1]
 
     def test_with_holiday_0(self):
         df = stock.get_etf_ohlcv_by_date("20210103", "20210108", "292340")
         temp = df.iloc[0:5, 0] == np.array([9737.23, 9756.27, 9796.98, 9723.65, 9771.73])
-        self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
-        self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
-        self.assertTrue(df.index[0] < df.index[-1])
+        assert temp.sum() == 5
+        assert isinstance(df.index, pd.DatetimeIndex)
+        assert isinstance(df.index[0], pd.Timestamp)
+        assert df.index[0] < df.index[-1]
 
     def test_with_holiday_1(self):
         df = stock.get_etf_ohlcv_by_date("20210103", "20210109", "292340")
         temp = df.iloc[0:5, 0] == np.array([9737.23, 9756.27, 9796.98, 9723.65, 9771.73])
-        self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
-        self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
-        self.assertTrue(df.index[0] < df.index[-1])
+        assert temp.sum() == 5
+        assert isinstance(df.index, pd.DatetimeIndex)
+        assert isinstance(df.index[0], pd.Timestamp)
+        assert df.index[0] < df.index[-1]
 
     def test_with_freq(self):
         df = stock.get_etf_ohlcv_by_date("20200101", "20200531", "292340", freq="m")
@@ -95,13 +98,13 @@ class EtfOhlcvByDate(unittest.TestCase):
         # 2020-04-30  5590.35  6055  6975   0  6975    8743    57352845   997.80
         # 2020-05-31  6845.59  6835  7450   0  7415    1788    13057270  1107.92
         temp = df.iloc[0:5, 0] == np.array([8910.61, 8633.13, 7720.09, 5590.35, 6845.59])
-        self.assertEqual(temp.sum(), 5)
-        self.assertIsInstance(df.index   , pd.core.indexes.datetimes.DatetimeIndex)
-        self.assertIsInstance(df.index[0], pd._libs.tslibs.timestamps.Timestamp)
-        self.assertTrue(df.index[0] < df.index[-1])
+        assert temp.sum() == 5
+        assert isinstance(df.index, pd.DatetimeIndex)
+        assert isinstance(df.index[0], pd.Timestamp)
+        assert df.index[0] < df.index[-1]
 
 
-class EtfOhlcvByTicker(unittest.TestCase):
+class TestEtfOhlcvByTicker:
     def test_with_business_day(self):
         df = stock.get_etf_ohlcv_by_ticker("20210325")
         #           NAV   시가   고가   저가    종가 거래량    거래대금  기초지수
@@ -112,14 +115,14 @@ class EtfOhlcvByTicker(unittest.TestCase):
         # 253160    4344.07   4400   4400   4295    4340  58943   256679440   2043.75
         # 278420    9145.45   9055   9150   9055    9105   1164    10598375   1234.03
         temp = df.iloc[0:5, 0] == np.array([41887.33, 10969.41, 46182.13, 4344.07, 9145.45])
-        self.assertEqual(temp.sum(), 5)
+        assert temp.sum() == 5
 
     def test_with_holiday(self):
         df = stock.get_etf_ohlcv_by_ticker("20210321")
-        self.assertTrue(df.empty)
+        assert df.empty
 
 
-class EtfPriceChange(unittest.TestCase):
+class TestEtfPriceChange:
     def test_with_business_day(self):
         df = stock.get_etf_price_change_by_ticker("20210325", "20210402")
         #           시가    종가  변동폭  등락률   거래량     거래대금
@@ -129,7 +132,7 @@ class EtfPriceChange(unittest.TestCase):
         # 253160    4380    4015    -365   -8.33   488304   2040509925
         # 278420    9095    9385     290    3.19     9114     84463155
         temp = df.iloc[0:5, 2] == np.array([1690, 330, 3965, -365, 290])
-        self.assertEqual(temp.sum(), 5)
+        assert temp.sum() == 5
 
     def test_with_holiday_0(self):
         df = stock.get_etf_price_change_by_ticker("20210321", "20210325")
@@ -140,14 +143,14 @@ class EtfPriceChange(unittest.TestCase):
         # 253160    4270    4340      70    1.64   297894   1290824525
         # 278420    9190    9105     -85   -0.92     5312     48491950
         temp = df.iloc[0:5, 2] == np.array([-390, -75, -950, 70, -85])
-        self.assertEqual(temp.sum(), 5)
+        assert temp.sum() == 5
 
     def test_with_holiday_1(self):
         df = stock.get_etf_price_change_by_ticker("20210321", "20210321")
-        self.assertTrue(df.empty)
+        assert df.empty
 
 
-class EtfPdf(unittest.TestCase):
+class TestEtfPdf:
     def test_with_business_day(self):
         df = stock.get_etf_portfolio_deposit_file("152100", "20210402")
         #          계약수       금액   비중
@@ -158,7 +161,7 @@ class EtfPdf(unittest.TestCase):
         # 051910    79.0   64701000   3.01
         # 006400    89.0   59363000   2.73
         temp = df.iloc[0:5, 0] == np.array([8140.0, 968.0, 218.0, 79.0, 89.0])
-        self.assertEqual(temp.sum(), 5)
+        assert temp.sum() == 5
 
     def test_with_negative_value(self):
         # 음수 -3.28 확인
@@ -167,10 +170,10 @@ class EtfPdf(unittest.TestCase):
         # 101R90   -3.58  18446744073334367616  0.0
         #           0.00                     0  0.0
         #           0.00                     0  0.0
-        self.assertAlmostEqual(df.iloc[1, 0], -3.58)
+        assert abs(df.iloc[1, 0] - (-3.58)) < 0.001
 
 
-class EtfTradingvolumeValue(unittest.TestCase):
+class TestEtfTradingvolumeValue:
     def test_investor_in_businessday(self):
         df = stock.get_etf_trading_volume_and_value("20220415", "20220422")
         #                거래량                              거래대금
@@ -181,7 +184,7 @@ class EtfTradingvolumeValue(unittest.TestCase):
         # 투신         14415013    15265023    850010    287167721259    253185404050  -33982317209
         # 사모          6795002     7546735    751733     58320840040    120956023820   62635183780
         temp = df.iloc[0:4, 0] == np.array([375220036, 15784738, 14415013, 6795002])
-        self.assertEqual(temp.sum(), 4)
+        assert temp.sum() == 4
 
     def test_volume_with_businessday(self):
         df = stock.get_etf_trading_volume_and_value("20220415", "20220422", "거래대금", "순매수")
@@ -192,8 +195,10 @@ class EtfTradingvolumeValue(unittest.TestCase):
         # 2022-04-19  -36298873785  7555666910  -1968998025   30712204900    0
         # 2022-04-20 -235935697655  8965445880  19247888605  207722363170    0
         # 2022-04-21  -33385835805  2835764290  35920390975   -5370319460    0
-        temp = df.iloc[0:5, 0] == np.array([25346770535, -168362290065, -36298873785, -235935697655, -33385835805])
-        self.assertEqual(temp.sum(), 5)
+        temp = df.iloc[0:5, 0] == np.array(
+            [25346770535, -168362290065, -36298873785, -235935697655, -33385835805]
+        )
+        assert temp.sum() == 5
 
     def test_indivisual_investor_in_businessday(self):
         df = stock.get_etf_trading_volume_and_value("20220908", "20220916", "580011")
@@ -214,10 +219,12 @@ class EtfTradingvolumeValue(unittest.TestCase):
         # 기타외국인     0     0      0         0       0      0
         # 전체          52    52      0    510105  510105      0
         temp = df.iloc[0] == np.array([27, 25, -2, 266785, 243320, -23465])
-        self.assertEqual(temp.sum(), 6)
+        assert temp.sum() == 6
 
     def test_indivisual_volume_with_businessday(self):
-        df = stock.get_etf_trading_volume_and_value("20220908", "20220916", "580011", "거래대금", "순매수")
+        df = stock.get_etf_trading_volume_and_value(
+            "20220908", "20220916", "580011", "거래대금", "순매수"
+        )
         #              기관  기타법인     개인  외국인  전체
         # 날짜
         # 2022-09-08  -3570         0     3570       0     0
@@ -226,7 +233,4 @@ class EtfTradingvolumeValue(unittest.TestCase):
         # 2022-09-15    -65         0       65       0     0
         # 2022-09-16  -9560         0     9560       0     0
         temp = df.iloc[0:5, 0] == np.array([-3570, -10205, -65, -65, -9560])
-        self.assertEqual(temp.sum(), 5)
-
-if __name__ == '__main__':
-    unittest.main()
+        assert temp.sum() == 5

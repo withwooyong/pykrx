@@ -1,7 +1,18 @@
-from pykrx.website import krx
 import datetime
-from pandas import DataFrame
 import re
+
+from pandas import DataFrame
+
+from pykrx.website.krx import datetime2string, get_nearest_business_day_in_a_week
+from pykrx.website.krx.future.wrap import (
+    get_future_ohlcv_by_ticker as _get_future_ohlcv_by_ticker,
+)
+from pykrx.website.krx.future.wrap import (
+    get_future_ticker_and_name as _get_future_ticker_and_name,
+)
+from pykrx.website.krx.future.wrap import (
+    get_future_ticker_list as _get_future_ticker_list,
+)
 
 yymmdd = re.compile(r"\d{4}[-/]?\d{2}[-/]?\d{2}")
 
@@ -19,7 +30,7 @@ def get_future_ticker_list() -> list:
         ['KRDRVFUK2I', 'KRDRVFUMKI', 'KRDRVOPK2I', 'KRDRVOPWKI', 'KRDRVOPMKI', 'KRDRVFUKQI', 'KRDRVOPKQI', 'KRDRVFUXI3', 'KRDRVFUVKI', 'KRDRVFUXAT', 'KRDRVFUBM3', 'KRDRVFUBM5', 'KRDRVFUBMA', 'KRDRVFURFR', 'KRDRVFUUSD', 'KRDRVFXUSD', 'KRDRVFUJPY', 'KRDRVFUEUR', 'KRDRVFUCNH', 'KRDRVFUKGD', 'KRDRVFUEQU', 'KRDRVOPEQU', 'KRDRVFUEST']
     """  # pylint: disable=line-too-long # noqa: E501
 
-    return krx.get_future_ticker_list()
+    return _get_future_ticker_list()  # type: ignore[return-value]
 
 
 def get_future_ticker_name(ticker: str) -> str:
@@ -35,7 +46,11 @@ def get_future_ticker_name(ticker: str) -> str:
 
         EURO STOXX50 Futures
     """
-    return krx.get_future_ticker_and_name()
+    df = _get_future_ticker_and_name()
+    # ticker로 필터링하여 해당 종목명 반환
+    if ticker in df.index:
+        return str(df.loc[ticker, "종목명"])  # type: ignore[index]
+    return ""
 
 
 def get_future_ohlcv(*args, **kwargs):
@@ -74,26 +89,25 @@ def get_future_ohlcv(*args, **kwargs):
     """  # pylint: disable=line-too-long # noqa: E501
 
     dates = list(filter(yymmdd.match, [str(x) for x in args]))
-    if len(dates) == 2 or ('fromdate' in kwargs and
-                           'todate' in kwargs):
+    if len(dates) == 2 or ("fromdate" in kwargs and "todate" in kwargs):
         raise NotImplementedError
         # return get_future_ohlcv_by_date(*args, **kwargs)
     else:
         return get_future_ohlcv_by_ticker(*args, **kwargs)
 
 
-def get_future_ohlcv_by_ticker(date: str, prod: str, alternative: bool = False,
-                               prev: bool = True) -> DataFrame:
+def get_future_ohlcv_by_ticker(
+    date: str, prod: str, alternative: bool = False, prev: bool = True
+) -> DataFrame:
     if isinstance(date, datetime.datetime):
-        date = krx.datetime2string(date)
+        date = datetime2string(date)
 
     date = date.replace("-", "")
 
-    df = krx.get_future_ohlcv_by_ticker(date, prod)
+    df = _get_future_ohlcv_by_ticker(date, prod)
     if df.empty and alternative:
-        target_date = krx.get_nearest_business_day_in_a_week(
-            date=date, prev=prev)
-        df = krx.get_future_ohlcv_by_ticker(target_date, prod)
+        target_date = get_nearest_business_day_in_a_week(date=date, prev=prev)
+        df = _get_future_ohlcv_by_ticker(target_date, prod)
     return df
 
 
@@ -104,5 +118,5 @@ if __name__ == "__main__":
     # names = get_future_ticker_name('KRDRVFUEST')
     # print(names)
 
-    df = get_future_ohlcv('20220902', 'KRDRVFUEST')
+    df = get_future_ohlcv("20220902", "KRDRVFUEST")
     print(df)

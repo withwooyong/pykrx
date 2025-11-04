@@ -1,20 +1,23 @@
-from pykrx.website.krx.krxio import KrxWebIo
 import pandas as pd
 from pandas import DataFrame
 
+from pykrx.website.krx.krxio import KrxWebIo
 
-class 상장종목검색(KrxWebIo):
+
+class ListedStockSearch(KrxWebIo):
+    """상장종목검색 - 상장된 주식 종목을 검색하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/comm/finder/finder_stkisu"
 
-    def fetch(self, mktsel: str = "ALL", searchText: str = "") -> DataFrame:
+    def fetch(self, mktsel: str = "ALL", search_text: str = "") -> DataFrame:
         """[12003] 개별종목 시세 추이에서 검색 버튼 눌러 활성화 되는 종목 검색창
             스크래핑
 
         Args:
             mktsel     (str, optional): 조회 시장 (STK/KSQ/ALL)
-            searchText (str, optional): 검색할 종목명 -  입력하지 않을 경우 전체
+            search_text (str, optional): 검색할 종목명 -  입력하지 않을 경우 전체
 
         Returns:
             DataFrame : 상장 종목 정보를 반환
@@ -33,18 +36,18 @@ class 상장종목검색(KrxWebIo):
                 KOSDAQ        16
                 KOSDAQ        16
         """
-        result = self.read(locale="ko_KR", mktsel=mktsel,
-                           searchText=searchText, typeNo=0)
-        return DataFrame(result['block1'])
+        result = self.read(locale="ko_KR", mktsel=mktsel, searchText=search_text, typeNo=0)
+        return DataFrame(result["block1"])  # type: ignore[index]
 
 
-class 상폐종목검색(KrxWebIo):
+class DelistedStockSearch(KrxWebIo):
+    """상폐종목검색 - 상장폐지된 주식 종목을 검색하는 클래스"""
+
     @property
     def bld(self):
-
         return "dbms/comm/finder/finder_listdelisu"
 
-    def fetch(self, mktsel: str = "ALL", searchText: str = "") -> DataFrame:
+    def fetch(self, mktsel: str = "ALL", search_text: str = "") -> DataFrame:
         """[20037] 상장폐지종목 현황
          - http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd?menuId=
            MDC02021301
@@ -52,7 +55,7 @@ class 상폐종목검색(KrxWebIo):
         Args:
             mktsel     (str, optional): 조회 시장 (STK/KSQ/ALL). Defaults to
                                         "ALL".
-            searchText (str, optional): 검색할 종목명으로 입력하지 않을 경우
+            search_text (str, optional): 검색할 종목명으로 입력하지 않을 경우
                                         전체 조회
 
         Returns:
@@ -70,23 +73,27 @@ class 상폐종목검색(KrxWebIo):
                   코스닥        16
                   코스닥        16
         """
-        result = self.read(mktsel=mktsel, searchText=searchText, typeNo=0)
-        return DataFrame(result['block1'])
+        result = self.read(mktsel=mktsel, searchText=search_text, typeNo=0)
+        return DataFrame(result["block1"])  # type: ignore[index]  # type: ignore[index]
 
 
-class 개별종목시세(KrxWebIo):
+class IndividualStockPrice(KrxWebIo):
+    """개별종목시세 - 개별 종목의 시세(가격) 정보를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT01701"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str, adjStkPrc: int) -> DataFrame:
+    def fetch(
+        self, start_date: str, end_date: str, isin_code: str, adjusted_price: int
+    ) -> DataFrame:
         """[12003] 개별종목 시세 추이 (수정종가 아님)
 
         Args:
-            strtDd     (str): 조회 시작 일자 (YYMMDD)
-            endDd      (str): 조회 종료 일자 (YYMMDD)
-            isuCd      (str): 조회 종목 ISIN
-            adjStkPrc  (int): 수정 종가 여부 (2:수정종가/1:단순종가)
+            start_date     (str): 조회 시작 일자 (YYMMDD)
+            end_date       (str): 조회 종료 일자 (YYMMDD)
+            isin_code      (str): 조회 종목 ISIN
+            adjusted_price (int): 수정 종가 여부 (2:수정종가/1:단순종가)
 
         Returns:
             DataFrame: 일자별 시세 조회 결과
@@ -111,21 +118,25 @@ class 개별종목시세(KrxWebIo):
                 540,862,299,030,000  5,969,782,550
                 543,250,212,050,000  5,969,782,550
         """
-        result = self.read(isuCd=isuCd, strtDd=strtDd, endDd=endDd, adjStkPrc=adjStkPrc)
-        return DataFrame(result['output'])
+        result = self.read(
+            isuCd=isin_code, strtDd=start_date, endDd=end_date, adjStkPrc=adjusted_price
+        )
+        return DataFrame(result["output"])  # type: ignore[index]  # type: ignore[index]
 
 
-class 전종목시세(KrxWebIo):
+class AllStockPrice(KrxWebIo):
+    """전종목시세 - 전체 종목의 시세(가격) 정보를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT01501"
 
-    def fetch(self, trdDd: str, mktId: str) -> DataFrame:
+    def fetch(self, trade_date: str, market_id: str) -> DataFrame:
         """[12001] 전종목 시세
 
         Args:
-            trdDd (str): 조회 일자 (YYMMDD)
-            mktId (str): 조회 시장 (STK/KSQ/KNX/ALL)
+            trade_date (str): 조회 일자 (YYMMDD)
+            market_id (str): 조회 시장 (STK/KSQ/KNX/ALL)
 
         Returns:
             DataFrame: 전종목의 가격 정보
@@ -151,21 +162,23 @@ class 전종목시세(KrxWebIo):
                 16,541    901,619,600  728,615,855,000   13,247,561    STK
                 31,950    142,780,675   91,264,138,975   20,394,221    KSQ
         """
-        result = self.read(mktId=mktId, trdDd=trdDd)
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(mktId=market_id, trdDd=trade_date)
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]  # type: ignore[index]
 
 
-class PER_PBR_배당수익률_전종목(KrxWebIo):
+class PerPbrDividendYieldAllStock(KrxWebIo):
+    """PER/PBR/배당수익률_전종목 - 전체 종목의 PER, PBR, 배당수익률을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT03501"
 
-    def fetch(self, trdDd: str, mktId: str) -> DataFrame:
+    def fetch(self, trade_date: str, market_id: str) -> DataFrame:
         """[12021] PER/PBR/배당수익률
 
         Args:
-            trdDd (str): 조회 일자 (YYMMDD)
-            mktId (str): 조회 시장 (STK/KSQ/KNX/ALL)
+            trade_date (str): 조회 일자 (YYMMDD)
+            market_id (str): 조회 시장 (STK/KSQ/KNX/ALL)
 
         Returns:
             DataFrame:
@@ -190,24 +203,25 @@ class PER_PBR_배당수익률_전종목(KrxWebIo):
                  10,530  0.66    0    0.00
                   7,468  3.43   50    0.20
         """
-        result = self.read(mktId=mktId, trdDd=trdDd)
-        return DataFrame(result['output'])
+        result = self.read(mktId=market_id, trdDd=trade_date)
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class PER_PBR_배당수익률_개별(KrxWebIo):
+class PerPbrDividendYieldIndividual(KrxWebIo):
+    """PER/PBR/배당수익률_개별 - 개별 종목의 PER, PBR, 배당수익률을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT03502"
 
-    def fetch(self, strtDd: str, endDd: str, mktId: str, isuCd: str) \
-            -> DataFrame:
+    def fetch(self, start_date: str, end_date: str, market_id: str, isin_code: str) -> DataFrame:
         """[12021] PER/PBR/배당수익률
 
         Args:
-            strtDd (str): 조회 시작 일자 (YYMMDD)
-            endDd  (str): 조회 종료 일자 (YYMMDD)
-            mktId  (str): 조회 시장 (STK/KSQ/KNX/ALL)
-            isuCd  (str): 조회 종목 ISIN
+            start_date (str): 조회 시작 일자 (YYMMDD)
+            end_date  (str): 조회 종료 일자 (YYMMDD)
+            market_id  (str): 조회 시장 (STK/KSQ/KNX/ALL)
+            isin_code  (str): 조회 종목 ISIN
 
         Returns:
             DataFrame:
@@ -225,25 +239,27 @@ class PER_PBR_배당수익률_개별(KrxWebIo):
                 5,997  7.55  28,126  1.61  850    1.88
                 5,997  7.59  28,126  1.62  850    1.87
         """
-        result = self.read(mktId=mktId, strtDd=strtDd, endDd=endDd,
-                           isuCd=isuCd)
-        return DataFrame(result['output'])
+        result = self.read(mktId=market_id, strtDd=start_date, endDd=end_date, isuCd=isin_code)
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 전종목등락률(KrxWebIo):
+class AllStockPriceChange(KrxWebIo):
+    """전종목등락률 - 전체 종목의 등락률(가격 변동률)을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT01602"
 
-    def fetch(self, strtDd: str, endDd: str, mktId: str, adjStkPrc: int) \
-            -> DataFrame:
+    def fetch(
+        self, start_date: str, end_date: str, market_id: str, adjusted_price: int
+    ) -> DataFrame:
         """[12002] 전종목 등락률
 
         Args:
-            strtDd     (str): 조회 시작 일자 (YYMMDD)
-            endDd      (str): 조회 종료 일자 (YYMMDD)
-            mktId      (str): 조회 시장 (STK/KSQ/ALL)
-            adjStkPrc  (int): 수정 종가 여부 (2:수정종가/1:단순종가)
+            start_date     (str): 조회 시작 일자 (YYMMDD)
+            end_date      (str): 조회 종료 일자 (YYMMDD)
+            market_id      (str): 조회 시장 (STK/KSQ/ALL)
+            adjusted_price  (int): 수정 종가 여부 (2:수정종가/1:단순종가)
 
         Returns:
             DataFrame:
@@ -261,23 +277,26 @@ class 전종목등락률(KrxWebIo):
                    5.62   1,707,900  132,455,779,600       1
                  -15.11   7,459,926   41,447,809,620       2
         """
-        result = self.read(mktId=mktId, adjStkPrc=adjStkPrc, strtDd=strtDd,
-                           endDd=endDd)
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(
+            mktId=market_id, adjStkPrc=adjusted_price, strtDd=start_date, endDd=end_date
+        )
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]
 
 
-class 외국인보유량_전종목(KrxWebIo):
+class ForeignOwnershipAllStock(KrxWebIo):
+    """외국인보유량_전종목 - 전체 종목의 외국인 보유량을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT03701"
 
-    def fetch(self, trdDd: str, mktId: str, isuLmtRto: int) -> DataFrame:
+    def fetch(self, trade_date: str, market_id: str, isin_limit_ratio: int) -> DataFrame:
         """[12023] 외국인보유량(개별종목) - 전종목
 
         Args:
-            trdDd     (str): 조회 일자 (YYMMDD)
-            mktId     (str): 조회 시장 (STK/KSQ/KNX/ALL)
-            isuLmtRto (int): 외국인 보유제한 종목
+            trade_date     (str): 조회 일자 (YYMMDD)
+            market_id     (str): 조회 시장 (STK/KSQ/KNX/ALL)
+            isin_limit_ratio (int): 외국인 보유제한 종목
             - 0 : check X
             - 1 : check O
 
@@ -304,23 +323,26 @@ class 외국인보유량_전종목(KrxWebIo):
                                2.26
                               10.80
         """
-        result = self.read(searchType=1, mktId=mktId, trdDd=trdDd,
-                           isuLmtRto=isuLmtRto)
-        return DataFrame(result['output'])
+        result = self.read(
+            searchType=1, mktId=market_id, trdDd=trade_date, isuLmtRto=isin_limit_ratio
+        )
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 외국인보유량_개별추이(KrxWebIo):
+class ForeignOwnershipIndividualTrend(KrxWebIo):
+    """외국인보유량_개별추이 - 개별 종목의 외국인 보유량 추이를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT03702"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str) -> DataFrame:
+    def fetch(self, start_date: str, end_date: str, isin_code: str) -> DataFrame:
         """[12023] 외국인보유량(개별종목) - 개별추이
 
         Args:
-            strtDd (str): 조회 시작 일자 (YYMMDD)
-            endDd  (str): 조회 종료 일자 (YYMMDD)
-            isuCd  (str): 조회 종목 ISIN
+            start_date (str): 조회 시작 일자 (YYMMDD)
+            end_date  (str): 조회 종료 일자 (YYMMDD)
+            isin_code  (str): 조회 종목 ISIN
 
         Returns:
             DataFrame:
@@ -345,27 +367,29 @@ class 외국인보유량_개별추이(KrxWebIo):
                              55.59
                              55.68
         """
-        result = self.read(searchType=2, strtDd=strtDd, endDd=endDd,
-                           isuCd=isuCd)
-        return DataFrame(result['output'])
+        result = self.read(searchType=2, strtDd=start_date, endDd=end_date, isuCd=isin_code)
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 투자자별_거래실적_전체시장_기간합계(KrxWebIo):
+class InvestorTradingVolumeMarketTotal(KrxWebIo):
+    """투자자별_거래실적_전체시장_기간합계 - 전체 시장의 투자자별 거래실적 기간합계를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT02201"
 
-    def fetch(self, strtDd: str, endDd: str, mktId: str, etf: str, etn: str,
-              els: str) -> DataFrame:
+    def fetch(
+        self, start_date: str, end_date: str, market_id: str, etf: str, etn: str, elw: str
+    ) -> DataFrame:
         """[12009] 투자자별 거래실적
 
         Args:
-            strtDd (str): 조회 시작 일자 (YYMMDD)
-            endDd  (str): 조회 종료 일자 (YYMMDD)
-            mktId  (str): 조회 시장 (STK/KSQ/ALL)
+            start_date (str): 조회 시작 일자 (YYMMDD)
+            end_date  (str): 조회 종료 일자 (YYMMDD)
+            market_id  (str): 조회 시장 (STK/KSQ/ALL)
             etf    (str): ETF 포함 여부 (""/EF)
             etn    (str): ETN 포함 여부 (""/EN)
-            els    (str): ELS 포함 여부 (""/ES)
+            elw    (str): ELW 포함 여부 (""/EW)
 
         Returns:
             DataFrame:
@@ -383,29 +407,41 @@ class 투자자별_거래실적_전체시장_기간합계(KrxWebIo):
                   1,142,499,274,494    1,000,228,858,448    -142,270,416,046
                      69,744,809,430       43,689,969,205     -26,054,840,225
         """
-        result = self.read(strtDd=strtDd, endDd=endDd, mktId=mktId, etf=etf,
-                           etn=etn, elw=els)
-        return DataFrame(result['output']).drop('CONV_OBJ_TP_CD', axis=1)
+        result = self.read(
+            strtDd=start_date, endDd=end_date, mktId=market_id, etf=etf, etn=etn, elw=elw
+        )
+        return DataFrame(result["output"]).drop("CONV_OBJ_TP_CD", axis=1)  # type: ignore[index]
 
 
-class 투자자별_거래실적_전체시장_일별추이_일반(KrxWebIo):
+class InvestorTradingVolumeMarketDailyGeneral(KrxWebIo):
+    """투자자별_거래실적_전체시장_일별추이_일반 - 전체 시장의 투자자별 거래실적 일별추이(일반)를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT02202"
 
-    def fetch(self, strtDd: str, endDd: str, mktId: str, etf: str, etn: str,
-              els: str, trdVolVal: int, askBid: int) -> DataFrame:
+    def fetch(
+        self,
+        start_date: str,
+        end_date: str,
+        market_id: str,
+        etf: str,
+        etn: str,
+        elw: str,
+        trade_volume_value: int,
+        ask_bid: int,
+    ) -> DataFrame:
         """[12009] 투자자별 거래실적 일별추이
 
         Args:
-            strtDd     (str): 조회 시작 일자 (YYMMDD)
-            endDd      (str): 조회 종료 일자 (YYMMDD)
-            mktId      (str): 조회 시장 (STK/KSQ/ALL)
+            start_date     (str): 조회 시작 일자 (YYMMDD)
+            end_date      (str): 조회 종료 일자 (YYMMDD)
+            market_id      (str): 조회 시장 (STK/KSQ/ALL)
             etf        (str): ETF 포함 여부 (""/EF)
             etn        (str): ETN 포함 여부 (""/EN)
-            els        (str): ELS 포함 여부 (""/ES)
-            trdVolVal  (int): 1: 거래량 / 2: 거래대금
-            askBid     (int): 1: 매도 / 2: 매수 / 3: 순매수
+            elw        (str): ELW 포함 여부 (""/EW)
+            trade_volume_value  (int): 1: 거래량 / 2: 거래대금
+            ask_bid     (int): 1: 매도 / 2: 매수 / 3: 순매수
 
         Returns:
             DataFrame:
@@ -427,30 +463,49 @@ class 투자자별_거래실적_전체시장_일별추이_일반(KrxWebIo):
                    106,647,770  1,353,312,434
                    123,524,707  1,472,048,573
         """
-        result = self.read(strtDd=strtDd, endDd=endDd, mktId=mktId, etf=etf,
-                           etn=etn, elw=els, inqTpCd=2, trdVolVal=trdVolVal,
-                           askBid=askBid)
-        return DataFrame(result['output'])
+        result = self.read(
+            strtDd=start_date,
+            endDd=end_date,
+            mktId=market_id,
+            etf=etf,
+            etn=etn,
+            elw=elw,
+            inqTpCd=2,
+            trdVolVal=trade_volume_value,
+            askBid=ask_bid,
+        )
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 투자자별_거래실적_전체시장_일별추이_상세(KrxWebIo):
+class InvestorTradingVolumeMarketDailyDetail(KrxWebIo):
+    """투자자별_거래실적_전체시장_일별추이_상세 - 전체 시장의 투자자별 거래실적 일별추이(상세)를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT02203"
 
-    def fetch(self, strtDd: str, endDd: str, mktId: str, etf: str, etn: str,
-              els: str, trdVolVal: int, askBid: int) -> DataFrame:
+    def fetch(
+        self,
+        start_date: str,
+        end_date: str,
+        market_id: str,
+        etf: str,
+        etn: str,
+        elw: str,
+        trade_volume_value: int,
+        ask_bid: int,
+    ) -> DataFrame:
         """[12009] 투자자별 거래실적 일별추이 (상세)
 
         Args:
-            strtDd     (str): 조회 시작 일자 (YYMMDD)
-            endDd      (str): 조회 종료 일자 (YYMMDD)
-            mktId      (str): 조회 시장 (STK/KSQ/ALL)
+            start_date     (str): 조회 시작 일자 (YYMMDD)
+            end_date      (str): 조회 종료 일자 (YYMMDD)
+            market_id      (str): 조회 시장 (STK/KSQ/ALL)
             etf        (str): ETF 포함 여부 (""/EF)
             etn        (str): ETN 포함 여부 (""/EN)
-            els        (str): ELS 포함 여부 (""/ES)
-            trdVolVal  (int): 1: 거래량 / 2: 거래대금
-            askBid     (int): 1: 매도 / 2: 매수 / 3: 순매수
+            elw        (str): ELW 포함 여부 (""/EW)
+            trade_volume_value  (int): 1: 거래량 / 2: 거래대금
+            ask_bid     (int): 1: 매도 / 2: 매수 / 3: 순매수
 
         Returns:
             DataFrame:
@@ -479,24 +534,34 @@ class 투자자별_거래실적_전체시장_일별추이_상세(KrxWebIo):
                    103,967,576  2,680,194  1,353,312,434
                    120,350,740  3,173,967  1,472,048,573
         """
-        result = self.read(strtDd=strtDd, endDd=endDd, mktId=mktId, etf=etf,
-                           etn=etn, elw=els, trdVolVal=trdVolVal,
-                           askBid=askBid, detailView=1)
-        return DataFrame(result['output'])
+        result = self.read(
+            strtDd=start_date,
+            endDd=end_date,
+            mktId=market_id,
+            etf=etf,
+            etn=etn,
+            elw=elw,
+            trdVolVal=trade_volume_value,
+            askBid=ask_bid,
+            detailView=1,
+        )
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 투자자별_거래실적_개별종목_기간합계(KrxWebIo):
+class InvestorTradingVolumeIndividualTotal(KrxWebIo):
+    """투자자별_거래실적_개별종목_기간합계 - 개별 종목의 투자자별 거래실적 기간합계를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT02301"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str) -> DataFrame:
+    def fetch(self, start_date: str, end_date: str, isin_code: str) -> DataFrame:
         """[12009] 투자자별 거래실적(개별종목)
 
         Args:
-            strtDd    (str): 조회 시작 일자 (YYMMDD)
-            endDd     (str): 조회 종료 일자 (YYMMDD)
-            isuCd     (str): 조회 종목 ISIN
+            start_date    (str): 조회 시작 일자 (YYMMDD)
+            end_date     (str): 조회 종료 일자 (YYMMDD)
+            isin_code     (str): 조회 종목 ISIN
 
         Returns:
             DataFrame:
@@ -514,26 +579,30 @@ class 투자자별_거래실적_개별종목_기간합계(KrxWebIo):
                      67,202,238,800      47,475,872,700     -19,726,366,100
                       9,360,874,400       6,170,507,400      -3,190,367,000
         """
-        result = self.read(strtDd=strtDd, endDd=endDd, isuCd=isuCd, inqTpCd=1,
-                           trdVolVal=1, askBid=1)
-        return DataFrame(result['output']).drop('CONV_OBJ_TP_CD', axis=1)
+        result = self.read(
+            strtDd=start_date, endDd=end_date, isuCd=isin_code, inqTpCd=1, trdVolVal=1, askBid=1
+        )
+        return DataFrame(result["output"]).drop("CONV_OBJ_TP_CD", axis=1)  # type: ignore[index]
 
 
-class 투자자별_거래실적_개별종목_일별추이_일반(KrxWebIo):
+class InvestorTradingVolumeIndividualDailyGeneral(KrxWebIo):
+    """투자자별_거래실적_개별종목_일별추이_일반 - 개별 종목의 투자자별 거래실적 일별추이(일반)를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT02302"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str, trdVolVal: int,
-              askBid: int) -> DataFrame:
+    def fetch(
+        self, start_date: str, end_date: str, isin_code: str, trade_volume_value: int, ask_bid: int
+    ) -> DataFrame:
         """[12009] 투자자별 거래실적(개별종목)
 
         Args:
-            strtDd     (str): 조회 시작 일자 (YYMMDD)
-            endDd      (str): 조회 종료 일자 (YYMMDD)
-            isuCd      (str): 조회 종목 ISIN
-            trdVolVal  (int): 1: 거래량 / 2: 거래대금
-            askBid     (int): 1: 매도 / 2: 매수 / 3: 순매수
+            start_date     (str): 조회 시작 일자 (YYMMDD)
+            end_date      (str): 조회 종료 일자 (YYMMDD)
+            isin_code      (str): 조회 종목 ISIN
+            trade_volume_value  (int): 1: 거래량 / 2: 거래대금
+            ask_bid     (int): 1: 매도 / 2: 매수 / 3: 순매수
 
         Returns:
             DataFrame:
@@ -551,26 +620,35 @@ class 투자자별_거래실적_개별종목_일별추이_일반(KrxWebIo):
                    33,431,809
                    26,393,970
         """
-        result = self.read(strtDd=strtDd, endDd=endDd, isuCd=isuCd, inqTpCd=2,
-                           trdVolVal=trdVolVal, askBid=askBid)
-        return DataFrame(result['output'])
+        result = self.read(
+            strtDd=start_date,
+            endDd=end_date,
+            isuCd=isin_code,
+            inqTpCd=2,
+            trdVolVal=trade_volume_value,
+            askBid=ask_bid,
+        )
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 투자자별_거래실적_개별종목_일별추이_상세(KrxWebIo):
+class InvestorTradingVolumeIndividualDailyDetail(KrxWebIo):
+    """투자자별_거래실적_개별종목_일별추이_상세 - 개별 종목의 투자자별 거래실적 일별추이(상세)를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT02303"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str, trdVolVal: int,
-              askBid: int) -> DataFrame:
+    def fetch(
+        self, start_date: str, end_date: str, isin_code: str, trade_volume_value: int, ask_bid: int
+    ) -> DataFrame:
         """[12009] 투자자별 거래실적(개별종목)
 
         Args:
-            strtDd     (str): 조회 시작 일자 (YYMMDD)
-            endDd      (str): 조회 종료 일자 (YYMMDD)
-            isuCd      (str): 조회 종목 ISIN
-            trdVolVal  (int): 1: 거래량 / 2: 거래대금
-            askBid     (int): 1: 매도 / 2: 매수 / 3: 순매수
+            start_date     (str): 조회 시작 일자 (YYMMDD)
+            end_date      (str): 조회 종료 일자 (YYMMDD)
+            isin_code      (str): 조회 종목 ISIN
+            trade_volume_value  (int): 1: 거래량 / 2: 거래대금
+            ask_bid     (int): 1: 매도 / 2: 매수 / 3: 순매수
 
         Returns:
             DataFrame:
@@ -598,25 +676,35 @@ class 투자자별_거래실적_개별종목_일별추이_상세(KrxWebIo):
                     17,660  26,393,970
                     27,034  36,068,848
         """
-        result = self.read(strtDd=strtDd, endDd=endDd, isuCd=isuCd, inqTpCd=2,
-                           trdVolVal=trdVolVal, askBid=askBid, detailView=1)
-        return DataFrame(result['output'])
+        result = self.read(
+            strtDd=start_date,
+            endDd=end_date,
+            isuCd=isin_code,
+            inqTpCd=2,
+            trdVolVal=trade_volume_value,
+            askBid=ask_bid,
+            detailView=1,
+        )
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 투자자별_순매수상위종목(KrxWebIo):
+class InvestorNetPurchaseTopStock(KrxWebIo):
+    """투자자별_순매수상위종목 - 투자자별 순매수 상위 종목을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT02401"
 
-    def fetch(self, strtDd: str, endDd: str, mktId: str, invstTpCd: str) \
-            -> DataFrame:
+    def fetch(
+        self, start_date: str, end_date: str, market_id: str, investor_type_code: str
+    ) -> DataFrame:
         """[12010] 투자자별 순매수상위종목
 
         Args:
-            strtDd    (str): 조회 시작 일자 (YYMMDD)
-            endDd     (str): 조회 종료 일자 (YYMMDD)
-            mktId     (str): 조회 시장 (STK/KSQ/KNX/ALL)
-            invstTpCd (str): 투자자
+            start_date    (str): 조회 시작 일자 (YYMMDD)
+            end_date     (str): 조회 종료 일자 (YYMMDD)
+            market_id     (str): 조회 시장 (STK/KSQ/KNX/ALL)
+            investor_type_code (str): 투자자
              - 1000 - 금융투자
              - 2000 - 보험
              - 3000 - 투신
@@ -651,21 +739,24 @@ class 투자자별_순매수상위종목(KrxWebIo):
                   157,665,835,500
                   110,663,211,500
         """
-        result = self.read(strtDd=strtDd, endDd=endDd, mktId=mktId,
-                           invstTpCd=invstTpCd)
-        return DataFrame(result['output'])
+        result = self.read(
+            strtDd=start_date, endDd=end_date, mktId=market_id, invstTpCd=investor_type_code
+        )
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 전체지수기본정보(KrxWebIo):
+class AllIndexBasicInfo(KrxWebIo):
+    """전체지수기본정보 - 전체 지수의 기본 정보를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT00401"
 
-    def fetch(self, idxIndMidclssCd: str) -> DataFrame:
+    def fetch(self, index_industry_midclass_code: str) -> DataFrame:
         """[11004] 전체지수 기본정보
 
         Args:
-            idxIndMidclssCd (str): 검색할 시장
+            index_industry_midclass_code (str): 검색할 시장
              - 01 : KRX
              - 02 : KOSPI
              - 03 : KOSDAQ
@@ -688,11 +779,13 @@ class 전체지수기본정보(KrxWebIo):
                             30         5        600
                            100         5        042
         """
-        result = self.read(idxIndMidclssCd=idxIndMidclssCd)
-        return DataFrame(result['output'])
+        result = self.read(idxIndMidclssCd=index_industry_midclass_code)
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 주가지수검색(KrxWebIo):
+class StockIndexSearch(KrxWebIo):
+    """주가지수검색 - 주가지수를 검색하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/comm/finder/finder_equidx"
@@ -721,23 +814,24 @@ class 주가지수검색(KrxWebIo):
                 marketName : ['KRX' 'KOSPI' 'KOSDAQ' '테마']
         """
         result = self.read(mktsel=market)
-        return DataFrame(result['block1'])
+        return DataFrame(result["block1"])  # type: ignore[index]
 
 
-class 개별지수시세(KrxWebIo):
+class IndividualIndexPrice(KrxWebIo):
+    """개별지수시세 - 개별 지수의 시세(가격) 정보를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT00301"
 
-    def fetch(self, ticker: str, group_id: str, fromdate: str, todate: str) \
-            -> DataFrame:
+    def fetch(self, ticker: str, group_id: str, from_date: str, to_date: str) -> DataFrame:
         """[11003] 개별지수 시세 추이
 
         Args:
             ticker   (str): index ticker
             group_id (str): index group id
-            fromdate (str): 조회 시작 일자 (YYMMDD)
-            todate   (str): 조회 종료 일자 (YYMMDD)
+            from_date (str): 조회 시작 일자 (YYMMDD)
+            to_date   (str): 조회 종료 일자 (YYMMDD)
 
         Returns:
             DataFrame:
@@ -762,22 +856,23 @@ class 개별지수시세(KrxWebIo):
                     3,933,263,957,150  143,250,319,286,660
                     6,602,833,901,895  146,811,113,380,140
         """
-        result = self.read(indIdx2=ticker, indIdx=group_id, strtDd=fromdate,
-                           endDd=todate)
-        return DataFrame(result['output'])
+        result = self.read(indIdx2=ticker, indIdx=group_id, strtDd=from_date, endDd=to_date)
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 전체지수시세(KrxWebIo):
+class AllIndexPrice(KrxWebIo):
+    """전체지수시세 - 전체 지수의 시세(가격) 정보를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT00101"
 
-    def fetch(self, trdDd: str, idxIndMidclssCd: str) -> DataFrame:
+    def fetch(self, trade_date: str, index_industry_midclass_code: str) -> DataFrame:
         """[11001] 전체지수 시세
 
         Args:
-            trdDd           (str): 조회 시작 일자 (YYMMDD)
-            idxIndMidclssCd (str): 검색 시장
+            trade_date           (str): 조회 시작 일자 (YYMMDD)
+            index_industry_midclass_code (str): 검색 시장
              - 01: KRX
              - 02: KOSPI
              - 03: KOSDAQ
@@ -832,23 +927,24 @@ class 전체지수시세(KrxWebIo):
                     7,370,285,846,691  1,661,265,294,441,780
                     5,768,837,287,881  1,453,136,066,992,400
         """
-        result = self.read(idxIndMidclssCd=idxIndMidclssCd, trdDd=trdDd)
-        return DataFrame(result['output'])
+        result = self.read(idxIndMidclssCd=index_industry_midclass_code, trdDd=trade_date)
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 전체지수등락률(KrxWebIo):
+class AllIndexPriceChange(KrxWebIo):
+    """전체지수등락률 - 전체 지수의 등락률(가격 변동률)을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT00201"
 
-    def fetch(self, strtDd: str, endDd: str, idxIndMidclssCd: str) \
-            -> DataFrame:
+    def fetch(self, start_date: str, end_date: str, index_industry_midclass_code: str) -> DataFrame:
         """[11002] 전체지수 등락률
 
         Args:
-            strtDd          (str): 조회 시작 일자 (YYMMDD)
-            endDd           (str): 조회 종료 일자 (YYMMDD)
-            idxIndMidclssCd (str): 검색 시장
+            start_date          (str): 조회 시작 일자 (YYMMDD)
+            end_date           (str): 조회 종료 일자 (YYMMDD)
+            index_industry_midclass_code (str): 검색 시장
              - 01: KRX
              - 02: KOSPI
              - 03: KOSDAQ
@@ -870,22 +966,25 @@ class 전체지수등락률(KrxWebIo):
                             -28.87   -1.65  2,807,696,801   27,059,313,040,039
                             251.38   12.28    288,959,592   29,886,192,965,797
         """
-        result = self.read(idxIndMidclssCd=idxIndMidclssCd, strtDd=strtDd,
-                           endDd=endDd)
-        return DataFrame(result['output'])
+        result = self.read(
+            idxIndMidclssCd=index_industry_midclass_code, strtDd=start_date, endDd=end_date
+        )
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class PER_PBR_배당수익률_전지수(KrxWebIo):
+class PerPbrDividendYieldAllIndex(KrxWebIo):
+    """PER/PBR/배당수익률_전지수 - 전체 지수의 PER, PBR, 배당수익률을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT00701"
 
-    def fetch(self, trdDd: str, idxIndMidclssCd: str) -> DataFrame:
+    def fetch(self, trade_date: str, index_industry_midclass_code: str) -> DataFrame:
         """[11007] PER/PBR/배당수익률
 
         Args:
-            trdDd           (str): 조회 일자 (YYMMDD)
-            idxIndMidclssCd (str): 검색할 시장
+            trade_date           (str): 조회 일자 (YYMMDD)
+            index_industry_midclass_code (str): 검색할 시장
              - 01 : KRX
              - 02 : KOSPI
              - 03 : KOSDAQ
@@ -907,24 +1006,27 @@ class PER_PBR_배당수익률_전지수(KrxWebIo):
                       -                  0.79   1.42
                       -                  2.59   0.61
         """
-        result = self.read(idxIndMidclssCd=idxIndMidclssCd, trdDd=trdDd)
-        return DataFrame(result['output'])
+        result = self.read(idxIndMidclssCd=index_industry_midclass_code, trdDd=trade_date)
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class PER_PBR_배당수익률_개별지수(KrxWebIo):
+class PerPbrDividendYieldIndividualIndex(KrxWebIo):
+    """PER/PBR/배당수익률_개별지수 - 개별 지수의 PER, PBR, 배당수익률을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT00702"
 
-    def fetch(self, strtDd: str, endDd: str, indTpCd: str, indTpCd2: str) \
-            -> DataFrame:
+    def fetch(
+        self, start_date: str, end_date: str, index_type_code: str, index_type_code2: str
+    ) -> DataFrame:
         """[11007] PER/PBR/배당수익률
 
         Args:
-            strtDd   (str): 조회 시작 일자 (YYMMDD)
-            endDd    (str): 조회 종료 일자 (YYMMDD)
-            indTpCd  (str): index group id
-            indTpCd2 (str): index ticker
+            start_date   (str): 조회 시작 일자 (YYMMDD)
+            end_date    (str): 조회 종료 일자 (YYMMDD)
+            index_type_code  (str): index group id
+            index_type_code2 (str): index ticker
 
         Returns:
             DataFrame:
@@ -945,12 +1047,15 @@ class PER_PBR_배당수익률_개별지수(KrxWebIo):
                      14.08       -                  1.29   1.94
                      14.10       -                  1.29   1.94
         """
-        result = self.read(indTpCd=indTpCd, indTpCd2=indTpCd2, strtDd=strtDd,
-                           endDd=endDd)
-        return DataFrame(result['output'])
+        result = self.read(
+            indTpCd=index_type_code, indTpCd2=index_type_code2, strtDd=start_date, endDd=end_date
+        )
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 지수구성종목(KrxWebIo):
+class IndexConstituentStock(KrxWebIo):
+    """지수구성종목 - 지수를 구성하는 종목들을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT00601"
@@ -982,46 +1087,50 @@ class 지수구성종목(KrxWebIo):
                         1.60   57,327,924,855,000
         """
         result = self.read(indIdx2=ticker, indIdx=group_id, trdDd=date)
-        return DataFrame(result['output'])
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 업종분류현황(KrxWebIo):
+class IndustryClassification(KrxWebIo):
+    """업종분류현황 - 업종별 분류 현황을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT03901"
 
-    def fetch(self, trdDd: str, mktId: str) -> DataFrame:
+    def fetch(self, trade_date: str, market_id: str) -> DataFrame:
         """
-                ISU_SRT_CD      ISU_ABBRV MKT_TP_NM    IDX_IND_NM  TDD_CLSPRC CMPPREVDD_PRC FLUC_RT             MKTCAP FLUC_TP_CD
-            0       095570     AJ네트웍스     KOSPI       서비스업      7,280            80    1.11    340,866,307,600          1
-            1       006840       AK홀딩스     KOSPI       기타금융     15,900           150    0.95    210,636,219,900          1
-            2       027410            BGF     KOSPI       기타금융      3,990             0    0.00    381,909,996,090          3
-            3       282330      BGF리테일     KOSPI        유통업     156,000        -1,500   -0.95  2,696,289,336,000          2
-            4       138930    BNK금융지주     KOSPI       기타금융      6,560           -40   -0.61  2,138,135,213,760          2
-            ..         ...       ...       ...        ...        ...           ...     ...                ...        ...
-            934     005010         휴스틸     KOSPI       철강금속      7,430          -470   -5.95    291,167,397,250          2
-            935     000540       흥국화재     KOSPI         보험        3,295           -40   -1.20    211,679,515,275          2
-            936     000547   흥국화재2우B     KOSPI         보험       21,750           100    0.46      3,340,800,000          1
-            937     000545      흥국화재우     KOSPI         보험       7,000           -30   -0.43      5,376,000,000          2
-            938     003280        흥아해운     KOSPI      운수창고업    1,660            -5   -0.30    399,105,332,340          2
+            ISU_SRT_CD      ISU_ABBRV MKT_TP_NM    IDX_IND_NM  TDD_CLSPRC CMPPREVDD_PRC FLUC_RT             MKTCAP FLUC_TP_CD
+        0       095570     AJ네트웍스     KOSPI       서비스업      7,280            80    1.11    340,866,307,600          1
+        1       006840       AK홀딩스     KOSPI       기타금융     15,900           150    0.95    210,636,219,900          1
+        2       027410            BGF     KOSPI       기타금융      3,990             0    0.00    381,909,996,090          3
+        3       282330      BGF리테일     KOSPI        유통업     156,000        -1,500   -0.95  2,696,289,336,000          2
+        4       138930    BNK금융지주     KOSPI       기타금융      6,560           -40   -0.61  2,138,135,213,760          2
+        ..         ...       ...       ...        ...        ...           ...     ...                ...        ...
+        934     005010         휴스틸     KOSPI       철강금속      7,430          -470   -5.95    291,167,397,250          2
+        935     000540       흥국화재     KOSPI         보험        3,295           -40   -1.20    211,679,515,275          2
+        936     000547   흥국화재2우B     KOSPI         보험       21,750           100    0.46      3,340,800,000          1
+        937     000545      흥국화재우     KOSPI         보험       7,000           -30   -0.43      5,376,000,000          2
+        938     003280        흥아해운     KOSPI      운수창고업    1,660            -5   -0.30    399,105,332,340          2
         """
-        return DataFrame(self.read(trdDd=trdDd, mktId=mktId)['block1'])
+        return DataFrame(self.read(trdDd=trade_date, mktId=market_id)["block1"])  # type: ignore[index]
 
 
 # -----------------------------------------------------------------------------
 # shorting
-class 개별종목_공매도_종합정보(KrxWebIo):
+class IndividualStockShortSellingSummary(KrxWebIo):
+    """개별종목_공매도_종합정보 - 개별 종목의 공매도 종합 정보를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/srt/MDCSTAT30001"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str) -> DataFrame:
+    def fetch(self, start_date: str, end_date: str, isin_code: str) -> DataFrame:
         """[31001] 개별종목 공매도 종합정보
 
         Args:
-            strtDd (str): 조회 시작 일자 (YYMMDD)
-            endDd  (str): 조회 종료 일자 (YYMMDD)
-            isuCd  (str): 조회 종목 ISIN
+            start_date (str): 조회 시작 일자 (YYMMDD)
+            end_date  (str): 조회 종료 일자 (YYMMDD)
+            isin_code  (str): 조회 종목 ISIN
 
         Returns:
             DataFrame:
@@ -1043,22 +1152,24 @@ class 개별종목_공매도_종합정보(KrxWebIo):
                     331,553,418,000
                     286,846,560,000
         """
-        result = self.read(isuCd=isuCd, strtDd=strtDd, endDd=endDd)
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(isuCd=isin_code, strtDd=start_date, endDd=end_date)
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]
 
 
-class 개별종목_공매도_거래_전종목(KrxWebIo):
+class IndividualStockShortSellingTradeAllStock(KrxWebIo):
+    """개별종목_공매도_거래_전종목 - 전체 종목의 공매도 거래 정보를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/srt/MDCSTAT30101"
 
-    def fetch(self, trdDd: str, mktId: str, secugrpId: list) -> DataFrame:
+    def fetch(self, trade_date: str, market_id: str, security_group_id: list) -> DataFrame:
         """[32001] 개별종목 시세 추이
 
         Args:
-            trdDd (str): 조회 일자 (YYMMDD)
-            mktId (str): 조회 시장 (STK/KSQ/KNX)
-            secugrpId (str): 증권구분 옵션을 리스트로 지정
+            trade_date (str): 조회 일자 (YYMMDD)
+            market_id (str): 조회 시장 (STK/KSQ/KNX)
+            security_group_id (str): 증권구분 옵션을 리스트로 지정
               - STMFRTSCIFDRFS : 주식
               - EF             : ETF
               - EN             : ETN
@@ -1086,23 +1197,24 @@ class 개별종목_공매도_거래_전종목(KrxWebIo):
                          0.12       14,928,000  13,018,465,500      0.11
                          0.16       10,635,610   6,658,032,800      0.16
         """
-        result = self.read(trdDd=trdDd, mktId=mktId,
-                           inqCond="".join(secugrpId))
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(trdDd=trade_date, mktId=market_id, inqCond="".join(security_group_id))
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]
 
 
-class 개별종목_공매도_거래_개별추이(KrxWebIo):
+class IndividualStockShortSellingTradeIndividualTrend(KrxWebIo):
+    """개별종목_공매도_거래_개별추이 - 개별 종목의 공매도 거래 추이를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/srt/MDCSTAT30102"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str) -> DataFrame:
+    def fetch(self, start_date: str, end_date: str, isin_code: str) -> DataFrame:
         """[32001] 개별종목 시세 추이
 
         Args:
-            strtDd (str): 조회 시작 일자 (YYMMDD)
-            endDd  (str): 조회 종료 일자 (YYMMDD)
-            isuCd  (str): 조회 종목 ISIN
+            start_date (str): 조회 시작 일자 (YYMMDD)
+            end_date  (str): 조회 종료 일자 (YYMMDD)
+            isin_code  (str): 조회 종목 ISIN
 
         Returns:
             DataFrame:
@@ -1125,24 +1237,31 @@ class 개별종목_공매도_거래_개별추이(KrxWebIo):
                                 0    467,705,100       0.0
         """
 
-        result = self.read(strtDd=strtDd, endDd=endDd, isuCd=isuCd)
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(strtDd=start_date, endDd=end_date, isuCd=isin_code)
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]
 
 
-class 투자자별_공매도_거래(KrxWebIo):
+class InvestorShortSellingTrade(KrxWebIo):
+    """투자자별_공매도_거래 - 투자자별 공매도 거래 정보를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/srt/MDCSTAT30301"
 
-    def fetch(self, strtDd: str, endDd: str, inqCondTpCd: int, mktTpCd: int) \
-            -> DataFrame:
+    def fetch(
+        self,
+        start_date: str,
+        end_date: str,
+        inquiry_condition_type_code: int,
+        market_type_code: int,
+    ) -> DataFrame:
         """[32003] 투자자별 공매도 거래
 
         Args:
-            strtDd      (str): 조회 시작 일자 (YYMMDD)
-            endDd       (str): 조회 종료 일자 (YYMMDD)
-            inqCondTpCd (int): 조회 구분 (1:거래량/2:거래대금)
-            mktTpCd     (int): 조회 시장 (1:KOSPI/2:KOSDAQ/3:KONEX)
+            start_date      (str): 조회 시작 일자 (YYMMDD)
+            end_date       (str): 조회 종료 일자 (YYMMDD)
+            inquiry_condition_type_code (int): 조회 구분 (1:거래량/2:거래대금)
+            market_type_code     (int): 조회 시장 (1:KOSPI/2:KOSDAQ/3:KONEX)
 
         Returns:
             DataFrame:
@@ -1180,22 +1299,28 @@ class 투자자별_공매도_거래(KrxWebIo):
                                 0   7,703,123,621
         """
 
-        result = self.read(strtDd=strtDd, endDd=endDd, inqCondTpCd=inqCondTpCd,
-                           mktTpCd=mktTpCd)
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(
+            strtDd=start_date,
+            endDd=end_date,
+            inqCondTpCd=inquiry_condition_type_code,
+            mktTpCd=market_type_code,
+        )
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]
 
 
-class 공매도_거래상위_50종목(KrxWebIo):
+class ShortSellingTradeTop50Stock(KrxWebIo):
+    """공매도_거래상위_50종목 - 공매도 거래량 상위 50개 종목을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/srt/MDCSTAT30401"
 
-    def fetch(self, trdDd: str, mktTpCd: int) -> DataFrame:
+    def fetch(self, trade_date: str, market_type_code: int) -> DataFrame:
         """[32004] 공매도 거래 상위 50종목
 
         Args:
-            trdDd   (str): 조회 일자 (YYMMDD)
-            mktTpCd (int): 시장구분 (1:KOSPI/2:KOSDAQ/3:KONEX)
+            trade_date   (str): 조회 일자 (YYMMDD)
+            market_type_code (int): 시장구분 (1:KOSPI/2:KOSDAQ/3:KONEX)
 
         Returns:
 
@@ -1224,21 +1349,23 @@ class 공매도_거래상위_50종목(KrxWebIo):
                                       0.44                        6.40  -0.35
                                       0.51                        4.91  -2.37
         """
-        result = self.read(trdDd=trdDd, mktTpCd=mktTpCd)
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(trdDd=trade_date, mktTpCd=market_type_code)
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]
 
 
-class 공매도_잔고상위_50종목(KrxWebIo):
+class ShortSellingBalanceTop50Stock(KrxWebIo):
+    """공매도_잔고상위_50종목 - 공매도 잔고 상위 50개 종목을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/srt/MDCSTAT30801"
 
-    def fetch(self, trdDd: str, mktTpCd: int) -> DataFrame:
+    def fetch(self, trade_date: str, market_type_code: int) -> DataFrame:
         """[33004] 공매도 잔고 상위 50종목
 
         Args:
-            trdDd   (str): 조회 일자 (YYMMDD)
-            mktTpCd (int): 시장구분 (1:KOSPI/2:KOSDAQ/3:KONEX)
+            trade_date   (str): 조회 일자 (YYMMDD)
+            market_type_code (int): 시장구분 (1:KOSPI/2:KOSDAQ/3:KONEX)
 
         Returns:
 
@@ -1267,21 +1394,23 @@ class 공매도_잔고상위_50종목(KrxWebIo):
                             3.23
                             2.74
         """
-        result = self.read(trdDd=trdDd, mktTpCd=mktTpCd)
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(trdDd=trade_date, mktTpCd=market_type_code)
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]
 
 
-class 전종목_공매도_잔고(KrxWebIo):
+class AllStockShortSellingBalance(KrxWebIo):
+    """전종목_공매도_잔고 - 전체 종목의 공매도 잔고를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/srt/MDCSTAT30501"
 
-    def fetch(self, trdDd: str, mktTpCd: int) -> DataFrame:
+    def fetch(self, trade_date: str, market_type_code: int) -> DataFrame:
         """[33001] 개별종목 공매도 잔고 (전종목)
 
         Args:
-            trdDd   (str): 조회 일자 (YYMMDD)
-            mktTpCd (int): 시장구분 (1:KOSPI/2:KOSDAQ/3:KONEX)
+            trade_date   (str): 조회 일자 (YYMMDD)
+            market_type_code (int): 시장구분 (1:KOSPI/2:KOSDAQ/3:KONEX)
 
         Returns:
 
@@ -1303,22 +1432,24 @@ class 전종목_공매도_잔고(KrxWebIo):
                       757,452,000  2,730,857,148,000    0.03
                     3,340,271,200  1,825,237,377,600    0.18
         """
-        result = self.read(trdDd=trdDd, mktTpCd=mktTpCd)
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(trdDd=trade_date, mktTpCd=market_type_code)
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]
 
 
-class 개별종목_공매도_잔고(KrxWebIo):
+class IndividualStockShortSellingBalance(KrxWebIo):
+    """개별종목_공매도_잔고 - 개별 종목의 공매도 잔고를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/srt/MDCSTAT30502"
 
-    def fetch(self, strtDd: str, endDd: str, isuCd: str) -> DataFrame:
+    def fetch(self, start_date: str, end_date: str, isin_code: str) -> DataFrame:
         """[33001] 개별종목 공매도 잔고 (개별종목)
 
         Args:
-            strtDd (str): 조회 시작 일자 (YYMMDD)
-            endDd  (str): 조회 종료 일자 (YYMMDD)
-            isuCd  (str): 조회 종목 ISIN
+            start_date (str): 조회 시작 일자 (YYMMDD)
+            end_date  (str): 조회 종료 일자 (YYMMDD)
+            isin_code  (str): 조회 종목 ISIN
 
         Returns:
 
@@ -1341,20 +1472,22 @@ class 개별종목_공매도_잔고(KrxWebIo):
                         333,113,866,290,000    0.09
                         331,322,931,525,000    0.09
         """
-        result = self.read(strtDd=strtDd, endDd=endDd, isuCd=isuCd)
-        return DataFrame(result['OutBlock_1'])
+        result = self.read(strtDd=start_date, endDd=end_date, isuCd=isin_code)
+        return DataFrame(result["OutBlock_1"])  # type: ignore[index]
 
 
-class 기업주요변동사항(KrxWebIo):
+class CompanyMajorChange(KrxWebIo):
+    """기업주요변동사항 - 기업의 주요 변동사항을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/HARD/MDCHARD04801"
 
-    def fetch(self, isuCd: str) -> DataFrame:
+    def fetch(self, isin_code: str) -> DataFrame:
         """기업 주요 변동사항
 
         Args:
-            isuCd  (str): 조회 종목 ISIN
+            isin_code  (str): 조회 종목 ISIN
 
         Returns:
 
@@ -1369,14 +1502,14 @@ class 기업주요변동사항(KrxWebIo):
                 3  1987/01/05                                        500  5000
                 4  2000/01/20
         """
-        result = self.read(isuCd=isuCd)
-        return DataFrame(result['block1'])
+        result = self.read(isuCd=isin_code)
+        return DataFrame(result["block1"])  # type: ignore[index]
 
 
 if __name__ == "__main__":
-    pd.set_option('display.width', None)
-    # print(개별종목_공매도_잔고().fetch("20200106", "20200110", "KR7005930003"))
-    # print(PER_PBR_배당수익률_개별지수().fetch("20211122", "20211129", 5, 300))
-    # print(전체지수시세().fetch("20211126", "02"))
-    # print(기업주요변동사항().fetch("KR7005930003"))
-    print(업종분류현황().fetch("20220902", "STK"))
+    pd.set_option("display.width", None)
+    # print(IndividualStockShortSellingBalance().fetch("20200106", "20200110", "KR7005930003"))
+    # print(PER_PBR_DividendYield_IndividualIndex().fetch("20211122", "20211129", 5, 300))
+    # print(AllIndexPrice().fetch("20211126", "02"))
+    # print(CompanyMajorChange().fetch("KR7005930003"))
+    print(IndustryClassification().fetch("20220902", "STK"))

@@ -1,5 +1,7 @@
-from pykrx.website.krx.krxio import KrxWebIo
+import pandas as pd
 from pandas import DataFrame
+
+from pykrx.website.krx.krxio import KrxWebIo
 
 
 class MKD40038(KrxWebIo):
@@ -11,18 +13,16 @@ class MKD40038(KrxWebIo):
 
     def fetch(self, fromdate, todate):
         try:
-            result = self.post(fr_work_dt=fromdate, to_work_dt=todate)
-            if len(result['block1']) == 0:
+            result = self.read(fr_work_dt=fromdate, to_work_dt=todate)
+            if len(result["block1"]) == 0:  # type: ignore[index]
                 return None
 
-            df = DataFrame(result['block1'])
-            df = df[['trd_dd', 'prc_yd1', 'prc_yd2', 'prc_yd3', 'prc_yd4',
-                     'prc_yd5']]
-            df.columns = ['일자', '3년물', '5년물', '10년물', '20년물',
-                          '30년물']
-            df.set_index('일자', inplace=True)
+            df = DataFrame(result["block1"])  # type: ignore[index]
+            df = df[["trd_dd", "prc_yd1", "prc_yd2", "prc_yd3", "prc_yd4", "prc_yd5"]]
+            df.columns = ["일자", "3년물", "5년물", "10년물", "20년물", "30년물"]
+            df.set_index("일자", inplace=True)
 
-            df.index = [x.replace('/', '-') for x in df.index]
+            df.index = [x.replace("/", "-") for x in df.index]  # type: ignore[assignment]
             df = df.astype(float)
             df.index.name = "지표수익률"
             return df
@@ -31,23 +31,25 @@ class MKD40038(KrxWebIo):
             return None
 
 
-class 전종목_장외채권수익률(KrxWebIo):
+class OtcBondYieldAllStock(KrxWebIo):
+    """장외 채권수익률 - 전종목 - 전체 장외 채권의 수익률을 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT11401"
 
-    def fetch(self, trdDd):
+    def fetch(self, trade_date: str):
         """
         [14017] 장외 채권수익률 - 전종목
          - http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd?menuId=
            MDC0201040101
 
         Args:
-            trdDd       (str): 조회 일자 (YYMMDD)
+            trade_date  (str): 조회 일자 (YYMMDD)
 
         Returns:
 
-            > 전종목_장외채권수익률().fetch("20220203")
+            > OtcBondYieldAllStock().fetch("20220203")
 
                            ITM_TP_NM LST_ORD_BAS_YD  CMP_YD
             0              국고채 1년          1.452  -0.011
@@ -57,25 +59,27 @@ class 전종목_장외채권수익률(KrxWebIo):
             4             국고채 10년          2.566  -0.020
 
         """
-        result = self.read(inqTpCd="T", trdDd=trdDd)
-        return DataFrame(result['output'])
+        result = self.read(inqTpCd="T", trdDd=trade_date)
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
-class 개별추이_장외채권수익률(KrxWebIo):
+class OtcBondYieldIndividualTrend(KrxWebIo):
+    """장외 채권수익률 - 개별추이 - 개별 장외 채권의 수익률 추이를 조회하는 클래스"""
+
     @property
     def bld(self):
         return "dbms/MDC/STAT/standard/MDCSTAT11402"
 
-    def fetch(self, strtDd, endDd, bndKindTpCd):
+    def fetch(self, start_date: str, end_date: str, bond_kind_type_code: str):
         """
         [14017] 장외 채권수익률 - 개별추이
          - http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd?menuId=
            MDC0201040101
 
         Args:
-            startDd     (str): 시작 일자 (YYMMDD)
-            endDd       (str): 종료 일자 (YYMMDD)
-            bndKindTpCd (str):
+            start_date          (str): 시작 일자 (YYMMDD)
+            end_date            (str): 종료 일자 (YYMMDD)
+            bond_kind_type_code (str):
                 - 3006 : 국고채1년
                 - 3019 : 국고채2년
                 - 3000 : 국고채3년
@@ -90,7 +94,7 @@ class 개별추이_장외채권수익률(KrxWebIo):
 
         Returns:
 
-            > 개별추이_장외채권수익률().fetch("20220103", "20220203", "3006")
+            > OtcBondYieldIndividualTrend().fetch("20220103", "20220203", "3006")
 
                  DISCLS_DD LST_ORD_BAS_YD  CMP_YD
             0   2022/02/03          1.452  -0.011
@@ -99,15 +103,15 @@ class 개별추이_장외채권수익률(KrxWebIo):
             3   2022/01/26          1.455   0.002
             4   2022/01/25          1.453   0.015
         """
-        result = self.read(inqTpCd="E", strtDd=strtDd, endDd=endDd,
-                           bndKindTpCd=bndKindTpCd)
-        return DataFrame(result['output'])
+        result = self.read(
+            inqTpCd="E", strtDd=start_date, endDd=end_date, bndKindTpCd=bond_kind_type_code
+        )
+        return DataFrame(result["output"])  # type: ignore[index]
 
 
 if __name__ == "__main__":
-    import pandas as pd
-    pd.set_option('display.width', None)
+    pd.set_option("display.width", None)
 
-    # df = 전종목_장외채권수익률().fetch("20220203")
-    df = 개별추이_장외채권수익률().fetch("20220103", "20220203", "3006")
+    # df = OtcBondYieldAllStock().fetch("20220203")
+    df = OtcBondYieldIndividualTrend().fetch("20220103", "20220203", "3006")
     print(df)

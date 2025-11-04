@@ -1,6 +1,12 @@
 from sqlite3 import NotSupportedError
-from pykrx.website import krx
+
 from pandas import DataFrame
+
+from pykrx.website.krx import get_nearest_business_day_in_a_week
+from pykrx.website.krx.bond.wrap import (
+    get_otc_treasury_yields_by_date,
+    get_otc_treasury_yields_by_ticker,
+)
 
 
 def get_otc_treasury_yields(*args) -> DataFrame:
@@ -60,13 +66,12 @@ def get_otc_treasury_yields(*args) -> DataFrame:
     """
 
     if len(args) == 1:
-        df = krx.bond.get_otc_treasury_yields_by_ticker(args[0])
+        df = get_otc_treasury_yields_by_ticker(args[0])
         if df.empty:
-            target_date = krx.get_nearest_business_day_in_a_week(
-                date=args[0], prev=True)
-            df = krx.get_otc_treasury_yields_by_ticker(target_date)
+            target_date = get_nearest_business_day_in_a_week(date=args[0], prev=True)
+            df = get_otc_treasury_yields_by_ticker(target_date)
     elif len(args) == 3:
-        df = krx.bond.get_otc_treasury_yields_by_date(*args)
+        df = get_otc_treasury_yields_by_date(*args)
     else:
         raise NotSupportedError
 

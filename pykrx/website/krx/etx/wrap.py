@@ -1,22 +1,29 @@
-from pykrx.website.comm import dataframe_empty_handler
-from pykrx.website.krx.etx.core import (
-    개별종목시세_ETF, 전종목시세_ETF, 전종목등락률_ETF, PDF, 추적오차율추이,
-    괴리율추이, ETF_투자자별거래실적_기간합계, ETF_투자자별거래실적_일별추이,
-    ETN_투자자별거래실적_개별종목_기간합계,
-    ETN_투자자별거래실적_개별종목_일별추이,
-    ETF_투자자별거래실적_개별종목_기간합계,
-    ETF_투자자별거래실적_개별종목_일별추이,
+from typing import cast
 
-)
-from pykrx.website.krx.etx.ticker import get_etx_isin, is_etf
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
+from pykrx.website.comm import dataframe_empty_handler
+from pykrx.website.krx.etx.core import (
+    PDF,
+    AllStockPriceChangeEtf,
+    AllStockPriceEtf,
+    DivergenceRateTrend,
+    EtfInvestorTradingVolumeDailyTrend,
+    EtfInvestorTradingVolumeIndividualStockDailyTrend,
+    EtfInvestorTradingVolumeIndividualStockPeriodTotal,
+    EtfInvestorTradingVolumePeriodTotal,
+    EtnInvestorTradingVolumeIndividualStockDailyTrend,
+    EtnInvestorTradingVolumeIndividualStockPeriodTotal,
+    IndividualStockPriceEtf,
+    TrackingErrorTrend,
+)
+from pykrx.website.krx.etx.ticker import get_etx_isin, is_etf
+
 
 @dataframe_empty_handler
-def get_etf_ohlcv_by_date(fromdate: str, todate: str, ticker: str) \
-        -> DataFrame:
+def get_etf_ohlcv_by_date(fromdate: str, todate: str, ticker: str) -> DataFrame:
     """주어진 기간동안 특정 ETF의 OHLCV
 
     Args:
@@ -35,26 +42,38 @@ def get_etf_ohlcv_by_date(fromdate: str, todate: str, ticker: str) \
     """  # pylint: disable=line-too-long # noqa: E501
 
     isin = get_etx_isin(ticker)
-    df = 개별종목시세_ETF().fetch(fromdate, todate, isin)
+    df = IndividualStockPriceEtf().fetch(fromdate, todate, isin)
 
-    df = df[['TRD_DD', 'LST_NAV', 'TDD_OPNPRC', 'TDD_HGPRC', 'TDD_LWPRC',
-             'TDD_CLSPRC', 'ACC_TRDVOL', 'ACC_TRDVAL', 'OBJ_STKPRC_IDX']]
-    df.columns = ['날짜', 'NAV', '시가', '고가', '저가', '종가', '거래량',
-                  '거래대금', '기초지수']
-    df = df.replace(r'^-$', '0', regex=True)
-    df = df.replace(r',', '', regex=True)
-    df = df.set_index('날짜')
-    df = df.astype({
-        "NAV": np.float64,
-        "시가": np.uint32,
-        "고가": np.uint32,
-        "저가": np.uint32,
-        "종가": np.uint32,
-        "거래량": np.uint64,
-        "거래대금": np.uint64,
-        "기초지수": np.float64
-    })
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
+    df = df[
+        [
+            "TRD_DD",
+            "LST_NAV",
+            "TDD_OPNPRC",
+            "TDD_HGPRC",
+            "TDD_LWPRC",
+            "TDD_CLSPRC",
+            "ACC_TRDVOL",
+            "ACC_TRDVAL",
+            "OBJ_STKPRC_IDX",
+        ]
+    ]
+    df.columns = ["날짜", "NAV", "시가", "고가", "저가", "종가", "거래량", "거래대금", "기초지수"]
+    df = df.replace(r"^-$", "0", regex=True)
+    df = df.replace(r",", "", regex=True)
+    df = df.set_index("날짜")
+    df = df.astype(
+        {
+            "NAV": np.float64,
+            "시가": np.uint32,
+            "고가": np.uint32,
+            "저가": np.uint32,
+            "종가": np.uint32,
+            "거래량": np.uint64,
+            "거래대금": np.uint64,
+            "기초지수": np.float64,
+        }
+    )
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
     return df.sort_index()
 
 
@@ -79,24 +98,36 @@ def get_etf_ohlcv_by_ticker(date: str) -> DataFrame:
             278420    9145.45   9055   9150   9055    9105   1164    10598375   1234.03
     """  # pylint: disable=line-too-long # noqa: E501
 
-    df = 전종목시세_ETF().fetch(date)
-    df = df[['ISU_SRT_CD', 'NAV', 'TDD_OPNPRC', 'TDD_HGPRC', 'TDD_LWPRC',
-             'TDD_CLSPRC', 'ACC_TRDVOL',  'ACC_TRDVAL', 'OBJ_STKPRC_IDX']]
-    df.columns = ['티커', 'NAV', '시가', '고가', '저가', '종가', '거래량',
-                  '거래대금', '기초지수']
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.set_index('티커')
-    df = df.astype({
-        "NAV": np.float64,
-        "시가": np.uint32,
-        "고가": np.uint32,
-        "저가": np.uint32,
-        "종가": np.uint32,
-        "거래량": np.uint64,
-        "거래대금": np.uint64,
-        "기초지수": np.float64
-    })
+    df = AllStockPriceEtf().fetch(date)
+    df = df[
+        [
+            "ISU_SRT_CD",
+            "NAV",
+            "TDD_OPNPRC",
+            "TDD_HGPRC",
+            "TDD_LWPRC",
+            "TDD_CLSPRC",
+            "ACC_TRDVOL",
+            "ACC_TRDVAL",
+            "OBJ_STKPRC_IDX",
+        ]
+    ]
+    df.columns = ["티커", "NAV", "시가", "고가", "저가", "종가", "거래량", "거래대금", "기초지수"]
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.set_index("티커")
+    df = df.astype(
+        {
+            "NAV": np.float64,
+            "시가": np.uint32,
+            "고가": np.uint32,
+            "저가": np.uint32,
+            "종가": np.uint32,
+            "거래량": np.uint64,
+            "거래대금": np.uint64,
+            "기초지수": np.float64,
+        }
+    )
     return df
 
 
@@ -122,22 +153,22 @@ def get_etf_price_change_by_ticker(fromdate: str, todate: str) -> DataFrame:
             278420    9095    9385     290    3.19     9114     84463155
     """
 
-    df = 전종목등락률_ETF().fetch(fromdate, todate)
-    df = df[['ISU_SRT_CD', 'BAS_PRC', 'CLSPRC', 'CMP_PRC', 'FLUC_RT',
-             'ACC_TRDVOL', 'ACC_TRDVAL']]
-    df.columns = ['티커', '시가', '종가', '변동폭', '등락률', '거래량',
-                  '거래대금']
-    df = df.replace(r'[^-\w\.]', '', regex=True)
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.set_index('티커')
-    df = df.astype({
-        "시가": np.uint32,
-        "종가": np.uint32,
-        "변동폭": np.int32,
-        "등락률": np.float32,
-        "거래량": np.uint64,
-        "거래대금": np.uint64
-    })
+    df = AllStockPriceChangeEtf().fetch(fromdate, todate)
+    df = df[["ISU_SRT_CD", "BAS_PRC", "CLSPRC", "CMP_PRC", "FLUC_RT", "ACC_TRDVOL", "ACC_TRDVAL"]]
+    df.columns = ["티커", "시가", "종가", "변동폭", "등락률", "거래량", "거래대금"]
+    df = df.replace(r"[^-\w\.]", "", regex=True)
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.set_index("티커")
+    df = df.astype(
+        {
+            "시가": np.uint32,
+            "종가": np.uint32,
+            "변동폭": np.int32,
+            "등락률": np.float32,
+            "거래량": np.uint64,
+            "거래대금": np.uint64,
+        }
+    )
     return df
 
 
@@ -161,29 +192,24 @@ def get_etf_portfolio_deposit_file(date: str, ticker: str) -> DataFrame:
 
     isin = get_etx_isin(ticker)
     df = PDF().fetch(date, isin)
-    df = df[['COMPST_ISU_CD', 'COMPST_ISU_CU1_SHRS', 'VALU_AMT', 'COMPST_RTO']]
-    df.columns = ['티커', '계약수', '금액', '비중']
+    df = df[["COMPST_ISU_CD", "COMPST_ISU_CU1_SHRS", "VALU_AMT", "COMPST_RTO"]]
+    df.columns = ["티커", "계약수", "금액", "비중"]
 
     # NOTE: 웹 서버가 COMPST_ISU_CD에 ISIN과 축향형을 혼합해서 반환한다. Why?
-    df['티커'] = df['티커'].apply(lambda x: x[3:9] if len(x) > 6 else x)
-    df = df.set_index('티커')
+    df["티커"] = df["티커"].apply(lambda x: x[3:9] if len(x) > 6 else x)  # type: ignore[attr-defined]
+    df = df.set_index("티커")
 
-    df = df.replace(',', '', regex=True)
+    df = df.replace(",", "", regex=True)
     # - empty string은 int, float로 형변환 불가
     #  -> 이 문제를 해결하기 위해 '-' 문자는 0으로 치환
-    df = df.replace(r'\-$', '0', regex=True)
-    df = df.astype({
-        "계약수": np.float64,
-        "금액": np.uint64,
-        "비중": np.float32
-    })
+    df = df.replace(r"\-$", "0", regex=True)
+    df = df.astype({"계약수": np.float64, "금액": np.uint64, "비중": np.float32})
     df = df[(df.T != 0).any()]
-    return df
+    return cast(DataFrame, df)
 
 
 @dataframe_empty_handler
-def get_etf_price_deviation(fromdate: str, todate: str, ticker: str) \
-        -> DataFrame:
+def get_etf_price_deviation(fromdate: str, todate: str, ticker: str) -> DataFrame:
     """주어진 기간동안 특정 종목의 괴리율 추이를 반환
 
     Args:
@@ -204,24 +230,19 @@ def get_etf_price_deviation(fromdate: str, todate: str, ticker: str) \
     """
 
     isin = get_etx_isin(ticker)
-    df = 괴리율추이().fetch(fromdate, todate, isin)
-    df = df[['TRD_DD', 'CLSPRC', 'LST_NAV', 'DIVRG_RT']]
-    df.columns = ['날짜', '종가', 'NAV', '괴리율']
-    df = df.set_index('날짜')
-    df = df.replace(',', '', regex=True)
+    df = DivergenceRateTrend().fetch(fromdate, todate, isin)
+    df = df[["TRD_DD", "CLSPRC", "LST_NAV", "DIVRG_RT"]]
+    df.columns = ["날짜", "종가", "NAV", "괴리율"]
+    df = df.set_index("날짜")
+    df = df.replace(",", "", regex=True)
 
-    df = df.astype({
-        "종가": np.uint32,
-        "NAV": np.float64,
-        "괴리율": np.float32
-    })
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
+    df = df.astype({"종가": np.uint32, "NAV": np.float64, "괴리율": np.float32})
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
     return df.sort_index()
 
 
 @dataframe_empty_handler
-def get_etf_tracking_error(fromdate: str, todate: str, ticker: str) \
-        -> DataFrame:
+def get_etf_tracking_error(fromdate: str, todate: str, ticker: str) -> DataFrame:
     """주어진 기간동안 특정 종목의 추적 오차율을 반환
 
     Args:
@@ -241,23 +262,18 @@ def get_etf_tracking_error(fromdate: str, todate: str, ticker: str) \
     """
 
     isin = get_etx_isin(ticker)
-    df = 추적오차율추이().fetch(fromdate, todate, isin)
-    df = df[['TRD_DD', 'LST_NAV', 'OBJ_STKPRC_IDX', 'TRACE_ERR_RT']]
-    df.columns = ['날짜', 'NAV', '지수', '추적오차율']
-    df = df.set_index('날짜')
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        "NAV": np.float64,
-        "지수": np.float64,
-        "추적오차율": np.float32
-    })
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
+    df = TrackingErrorTrend().fetch(fromdate, todate, isin)
+    df = df[["TRD_DD", "LST_NAV", "OBJ_STKPRC_IDX", "TRACE_ERR_RT"]]
+    df.columns = ["날짜", "NAV", "지수", "추적오차율"]
+    df = df.set_index("날짜")
+    df = df.replace(",", "", regex=True)
+    df = df.astype({"NAV": np.float64, "지수": np.float64, "추적오차율": np.float32})
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
     return df.sort_index()
 
 
 @dataframe_empty_handler
-def get_trading_volume_and_value_by_investor(fromdate: str, todate: str) \
-        -> DataFrame:
+def get_trading_volume_and_value_by_investor(fromdate: str, todate: str) -> DataFrame:
     """주어진 기간의 투자자별 거래실적 합계
 
     Args:
@@ -278,31 +294,32 @@ def get_trading_volume_and_value_by_investor(fromdate: str, todate: str) \
             사모          6795002     7546735    751733     58320840040    120956023820   62635183780
     """  # pylint: disable=line-too-long # noqa: E501
 
-    df = ETF_투자자별거래실적_기간합계().fetch(fromdate, todate)
+    df = EtfInvestorTradingVolumePeriodTotal().fetch(fromdate, todate)
     df = df[df.columns[1:]]
     # df.columns = ["투자자", "거래량-매도"]
 
-    df = df.set_index('INVST_NM')
+    df = df.set_index("INVST_NM")
     df.index.name = None
-    df.columns = pd.MultiIndex.from_product(
-        [["거래량", "거래대금"], ["매도", "매수", "순매수"]])
+    df.columns = pd.MultiIndex.from_product([["거래량", "거래대금"], ["매도", "매수", "순매수"]])
 
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        ("거래량", "매도"): np.uint64,
-        ("거래량", "매수"): np.uint64,
-        ("거래량", "순매수"): np.int64,
-        ("거래대금", "매도"): np.uint64,
-        ("거래대금", "매수"): np.uint64,
-        ("거래대금", "순매수"): np.int64,
-    })
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            ("거래량", "매도"): np.uint64,
+            ("거래량", "매수"): np.uint64,
+            ("거래량", "순매수"): np.int64,
+            ("거래대금", "매도"): np.uint64,
+            ("거래대금", "매수"): np.uint64,
+            ("거래대금", "순매수"): np.int64,
+        }
+    )
     return df
 
 
 @dataframe_empty_handler
 def get_trading_volume_and_value_by_date(
-    fromdate: str, todate: str, query_type1: str, query_type2: str) \
-         -> DataFrame:
+    fromdate: str, todate: str, query_type1: str, query_type2: str
+) -> DataFrame:
     """주어진 기간의 일자별 거래 실적 조회
 
     Args:
@@ -325,29 +342,33 @@ def get_trading_volume_and_value_by_date(
             2022-04-21  -33385835805  2835764290  35920390975   -5370319460    0
             2022-04-22  -10628831870  2032673735  39477777530  -30881619395    0
     """  # pylint: disable=line-too-long # noqa: E501
-    query_type1 = {"거래대금": 1, "거래량": 2}.get(query_type1, 1)
-    query_type2 = {"순매수": 1, "매수": 2, "매도": 3}.get(query_type2, 3)
+    query_type1_int = {"거래대금": 1, "거래량": 2}.get(query_type1, 1)
+    query_type2_int = {"순매수": 1, "매수": 2, "매도": 3}.get(query_type2, 3)
 
-    df = ETF_투자자별거래실적_일별추이().fetch(
-        fromdate, todate, query_type1, query_type2)
-    df.columns = ['날짜', '기관', '기타법인', '개인', '외국인', "전체"]
+    df = EtfInvestorTradingVolumeDailyTrend().fetch(
+        fromdate, todate, query_type1_int, query_type2_int
+    )
+    df.columns = ["날짜", "기관", "기타법인", "개인", "외국인", "전체"]
 
-    df = df.set_index('날짜')
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
+    df = df.set_index("날짜")
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
 
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        "기관": np.int64,
-        "기타법인": np.int64,
-        "개인": np.int64,
-        "외국인": np.int64,
-        "전체": np.uint64,
-    })
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            "기관": np.int64,
+            "기타법인": np.int64,
+            "개인": np.int64,
+            "외국인": np.int64,
+            "전체": np.uint64,
+        }
+    )
     return df.sort_index()
 
 
 def get_indivisual_trading_volume_and_value_by_investor(
-        fromdate: str, todate: str, ticker: str) -> DataFrame:
+    fromdate: str, todate: str, ticker: str
+) -> DataFrame:
     """주어진 기간 동안 ETF 개별종목의 거래실적 합계
 
     Args:
@@ -380,33 +401,32 @@ def get_indivisual_trading_volume_and_value_by_investor(
 
     isin = get_etx_isin(ticker)
     if is_etf(ticker):
-        df = ETF_투자자별거래실적_개별종목_기간합계().fetch(
-            fromdate, todate, isin)
+        df = EtfInvestorTradingVolumeIndividualStockPeriodTotal().fetch(fromdate, todate, isin)
     else:
-        df = ETN_투자자별거래실적_개별종목_기간합계().fetch(
-            fromdate, todate, isin)
+        df = EtnInvestorTradingVolumeIndividualStockPeriodTotal().fetch(fromdate, todate, isin)
 
     df = df[df.columns[1:]]
     df = df.set_index("INVST_NM")
-    df.columns = pd.MultiIndex.from_product(
-        [["거래량", "거래대금"], ["매도", "매수", "순매수"]])
+    df.columns = pd.MultiIndex.from_product([["거래량", "거래대금"], ["매도", "매수", "순매수"]])
 
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        ("거래량", "매도"): np.uint64,
-        ("거래량", "매수"): np.uint64,
-        ("거래량", "순매수"): np.int64,
-        ("거래대금", "매도"): np.uint64,
-        ("거래대금", "매수"): np.uint64,
-        ("거래대금", "순매수"): np.int64,
-    })
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            ("거래량", "매도"): np.uint64,
+            ("거래량", "매수"): np.uint64,
+            ("거래량", "순매수"): np.int64,
+            ("거래대금", "매도"): np.uint64,
+            ("거래대금", "매수"): np.uint64,
+            ("거래대금", "순매수"): np.int64,
+        }
+    )
     return df
 
 
 @dataframe_empty_handler
 def get_indivisual_trading_volume_and_value_by_date(
-    fromdate: str, todate: str, ticker: str, query_type1: str,
-        query_type2: str) -> DataFrame:
+    fromdate: str, todate: str, ticker: str, query_type1: str, query_type2: str
+) -> DataFrame:
     """주어진 기간동안 ETF 개별 종목 일자별 거래 실적 조회
 
     Args:
@@ -432,35 +452,37 @@ def get_indivisual_trading_volume_and_value_by_date(
     """  # pylint: disable=line-too-long # noqa: E501
 
     isin = get_etx_isin(ticker)
-    query_type1 = {"거래대금": 1, "거래량": 2}.get(query_type1, 1)
-    query_type2 = {"순매수": 1, "매수": 2, "매도": 3}.get(query_type2, 3)
+    query_type1_int = {"거래대금": 1, "거래량": 2}.get(query_type1, 1)
+    query_type2_int = {"순매수": 1, "매수": 2, "매도": 3}.get(query_type2, 3)
 
     if is_etf(ticker):
-        df = ETF_투자자별거래실적_개별종목_일별추이().fetch(
-            fromdate, todate, isin, inqCondTpCd1=query_type1,
-            inqCondTpCd2=query_type2)
+        df = EtfInvestorTradingVolumeIndividualStockDailyTrend().fetch(
+            fromdate, todate, isin, query_type1_int, query_type2_int
+        )
     else:
-        df = ETN_투자자별거래실적_개별종목_일별추이().fetch(
-            fromdate, todate, isin, inqCondTpCd1=query_type1,
-            inqCondTpCd2=query_type2)
-    df.columns = ['날짜', '기관', '기타법인', '개인', '외국인', "전체"]
+        df = EtnInvestorTradingVolumeIndividualStockDailyTrend().fetch(
+            fromdate, todate, isin, query_type1_int, query_type2_int
+        )
+    df.columns = ["날짜", "기관", "기타법인", "개인", "외국인", "전체"]
 
-    df = df.set_index('날짜')
-    df.index = pd.to_datetime(df.index, format='%Y/%m/%d')
+    df = df.set_index("날짜")
+    df.index = pd.to_datetime(df.index, format="%Y/%m/%d")
 
-    df = df.replace(',', '', regex=True)
-    df = df.astype({
-        "기관": np.int64,
-        "기타법인": np.int64,
-        "개인": np.int64,
-        "외국인": np.int64,
-        "전체": np.uint64,
-    })
+    df = df.replace(",", "", regex=True)
+    df = df.astype(
+        {
+            "기관": np.int64,
+            "기타법인": np.int64,
+            "개인": np.int64,
+            "외국인": np.int64,
+            "전체": np.uint64,
+        }
+    )
     return df.sort_index()
 
 
 if __name__ == "__main__":
-    pd.set_option('display.width', None)
+    pd.set_option("display.width", None)
     # print(get_etf_ohlcv_by_date("20200101", "20200401", "295820"))
     # print(get_etf_portfolio_deposit_file("20210119", "152100"))
     # print( get_etf_price_deviation("20200101", "20200401", "295820"))

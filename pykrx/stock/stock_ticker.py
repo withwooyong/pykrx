@@ -1,11 +1,14 @@
 """
 주식 티커 관련 함수들
 """
-from pykrx.website import krx
+
+from pykrx.website.krx.market.ticker import get_stock_name
+from pykrx.website.krx.market.wrap import get_market_ticker_and_name
+
 from .stock_business_days import get_nearest_business_day_in_a_week
 
 
-def get_market_ticker_list(date: str = None, market: str = "KOSPI") -> list:
+def get_market_ticker_list(date: str | None = None, market: str = "KOSPI") -> list[str]:
     """티커 목록 조회
 
     Args:
@@ -18,7 +21,7 @@ def get_market_ticker_list(date: str = None, market: str = "KOSPI") -> list:
     if date is None:
         date = get_nearest_business_day_in_a_week()
 
-    s = krx.get_market_ticker_and_name(date, market)
+    s = get_market_ticker_and_name(date, market)
     return s.index.to_list()
 
 
@@ -31,4 +34,4 @@ def get_market_ticker_name(ticker: str) -> str:
     Returns:
         str: 종목명
     """
-    return krx.get_stock_name(ticker)
+    return get_stock_name(ticker)

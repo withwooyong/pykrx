@@ -12,7 +12,7 @@ class Sise(NaverWebIo):
     def uri(self):
         return "/sise.nhn"
 
-    def fetch(self, ticker, count, timeframe='day'):
+    def fetch(self, ticker, count, timeframe="day"):
         """
         :param ticker:
         :param count:

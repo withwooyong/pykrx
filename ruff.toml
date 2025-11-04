@@ -1,0 +1,61 @@
+# Ruff 설정 파일
+# 사용하지 않는 import 자동 제거 및 코드 품질 관리
+
+# Python 버전
+target-version = "py311"
+
+# 한 줄 최대 길이
+line-length = 100
+
+# 제외할 디렉토리
+exclude = [
+    ".git",
+    ".venv",
+    "test_env",
+    "__pycache__",
+    "*.pyc",
+    ".pytest_cache",
+    "build",
+    "dist",
+]
+
+[lint]
+# 활성화할 규칙
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes (unused imports 포함)
+    "I",     # isort (import 정렬)
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
+]
+
+# 무시할 규칙
+ignore = [
+    "E501",  # line too long (formatter가 처리)
+    "B008",  # do not perform function calls in argument defaults (FastAPI에서 필요)
+    "B905",  # zip() without explicit strict= parameter
+    "N813",  # 클래스 이름 CapWords 규칙 (한국어 클래스 이름 사용 - 의도적 설계)
+]
+
+# 파일별 무시 규칙
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]  # __init__.py에서는 re-export를 위해 unused import 허용
+"tests/*" = ["F401", "F811"]  # 테스트 파일에서는 조금 더 관대하게
+"pykrx/website/krx/market/core.py" = ["N813"]  # 한국어 클래스 이름 사용 (의도적 설계)
+
+[lint.isort]
+# isort 설정 (import 정렬)
+known-first-party = ["app"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[format]
+# 포맷팅 설정
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+

@@ -1,18 +1,29 @@
 """
 주식 OHLCV 관련 함수들
 """
+
 import datetime
-import pandas as pd
+from typing import cast
+
 from pandas import DataFrame
-from pykrx.website import krx, naver
-from .stock_utils import regex_yymmdd, resample_ohlcv, market_valid_check
-from .stock_ticker import get_market_ticker_name
+
+from pykrx.website.krx import datetime2string
+from pykrx.website.krx.market.wrap import (
+    get_market_ohlcv_by_date as _get_market_ohlcv_by_date,
+)
+from pykrx.website.krx.market.wrap import (
+    get_market_ohlcv_by_ticker as _get_market_ohlcv_by_ticker,
+)
+from pykrx.website.naver.wrap import get_market_ohlcv_by_date as _get_naver_market_ohlcv_by_date
+
 from .stock_business_days import get_nearest_business_day_in_a_week
+from .stock_ticker import get_market_ticker_name
+from .stock_utils import market_valid_check, regex_yymmdd, resample_ohlcv
 
 
 def get_market_ohlcv(*args, **kwargs):
     """OHLCV 조회
-    
+
     Args:
         특정 종목의 지정된 기간 OHLCV 조회
         fromdate     (str           ): 조회 시작 일자 (YYYYMMDD)
@@ -29,15 +40,20 @@ def get_market_ohlcv(*args, **kwargs):
         DataFrame: OHLCV 데이터
     """
     dates = list(filter(regex_yymmdd.match, [str(x) for x in args]))
-    if len(dates) == 2 or ('fromdate' in kwargs and 'todate' in kwargs):
+    if len(dates) == 2 or ("fromdate" in kwargs and "todate" in kwargs):
         return get_market_ohlcv_by_date(*args, **kwargs)
     else:
         return get_market_ohlcv_by_ticker(*args, **kwargs)
 
 
 def get_market_ohlcv_by_date(
-    fromdate: str, todate: str, ticker: str, freq: str = 'd',
-        adjusted: bool = True, name_display: bool = False) -> DataFrame:
+    fromdate: str,
+    todate: str,
+    ticker: str,
+    freq: str = "d",
+    adjusted: bool = True,
+    name_display: bool = False,
+) -> DataFrame:
     """특정 종목의 일자별로 정렬된 OHLCV
 
     Args:
@@ -52,36 +68,29 @@ def get_market_ohlcv_by_date(
         DataFrame: OHLCV 데이터
     """
     if isinstance(fromdate, datetime.datetime):
-        fromdate = krx.datetime2string(fromdate)
+        fromdate = datetime2string(fromdate)
 
     if isinstance(todate, datetime.datetime):
-        todate = krx.datetime2string(todate)
+        todate = datetime2string(todate)
 
     fromdate = fromdate.replace("-", "")
     todate = todate.replace("-", "")
 
     if adjusted:
-        df = naver.get_market_ohlcv_by_date(fromdate, todate, ticker)
+        df = _get_naver_market_ohlcv_by_date(fromdate, todate, ticker)
     else:
-        df = krx.get_market_ohlcv_by_date(fromdate, todate, ticker, False)
+        df = _get_market_ohlcv_by_date(fromdate, todate, ticker, False)
 
     if name_display:
         df.columns.name = get_market_ticker_name(ticker)
 
-    how = {
-        '시가': 'first',
-        '고가': 'max',
-        '저가': 'min',
-        '종가': 'last',
-        '거래량': 'sum'
-    }
+    how = {"시가": "first", "고가": "max", "저가": "min", "종가": "last", "거래량": "sum"}
 
-    return resample_ohlcv(df, freq, how)
+    return cast(DataFrame, resample_ohlcv(df, freq, how))
 
 
 @market_valid_check()
-def get_market_ohlcv_by_ticker(
-        date, market: str = "KOSPI", alternative: bool = False) -> DataFrame:
+def get_market_ohlcv_by_ticker(date, market: str = "KOSPI", alternative: bool = False) -> DataFrame:
     """티커별로 정리된 전종목 OHLCV
 
     Args:
@@ -93,13 +102,13 @@ def get_market_ohlcv_by_ticker(
         DataFrame: OHLCV 데이터
     """
     if isinstance(date, datetime.datetime):
-        date = krx.datetime2string(date)
+        date = datetime2string(date)
 
     date = date.replace("-", "")
 
-    df = krx.get_market_ohlcv_by_ticker(date, market)
-    holiday = (df[['시가', '고가', '저가', '종가']] == 0).all(axis=None)
+    df = _get_market_ohlcv_by_ticker(date, market)
+    holiday = (df[["시가", "고가", "저가", "종가"]] == 0).all(axis=None)
     if holiday and alternative:
         target_date = get_nearest_business_day_in_a_week(date=date, prev=True)
-        df = krx.get_market_ohlcv_by_ticker(target_date, market)
+        df = _get_market_ohlcv_by_ticker(target_date, market)
     return df
