@@ -63,3 +63,9 @@ urllib3==2.5.0
 
 # 데코레이터 및 래퍼 함수 유틸리티
 wrapt==2.0.0
+
+# DuckDB - 인메모리 분석 데이터베이스
+duckdb==1.4.1
+
+# Apache Arrow - 컬럼형 메모리 포맷
+pyarrow==22.0.0
