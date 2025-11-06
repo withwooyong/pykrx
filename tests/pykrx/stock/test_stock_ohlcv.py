@@ -31,7 +31,7 @@ class TestStockOHLCV:
 
     def test_get_market_ohlcv_by_date_with_string_dates(self):
         """문자열 날짜로 OHLCV 조회 테스트"""
-        with patch("pykrx.website.naver.get_market_ohlcv_by_date") as mock_naver:
+        with patch("pykrx.stock.stock_ohlcv._get_naver_market_ohlcv_by_date") as mock_naver:
             # Mock 데이터 생성
             mock_df = pd.DataFrame(
                 {
@@ -65,8 +65,8 @@ class TestStockOHLCV:
     def test_get_market_ohlcv_by_date_with_datetime_dates(self):
         """datetime 객체로 OHLCV 조회 테스트"""
         with (
-            patch("pykrx.website.krx.datetime2string") as mock_datetime2string,
-            patch("pykrx.website.krx.get_market_ohlcv_by_date") as mock_krx,
+            patch("pykrx.stock.stock_ohlcv.datetime2string") as mock_datetime2string,
+            patch("pykrx.stock.stock_ohlcv._get_market_ohlcv_by_date") as mock_krx,
         ):
             # datetime2string이 두 번 호출되므로 side_effect 사용
             mock_datetime2string.side_effect = [self.FROMDATE, self.TODATE_END]
@@ -99,7 +99,7 @@ class TestStockOHLCV:
 
     def test_get_market_ohlcv_by_date_with_dash_dates(self):
         """하이픈이 포함된 날짜로 OHLCV 조회 테스트"""
-        with patch("pykrx.website.naver.get_market_ohlcv_by_date") as mock_naver:
+        with patch("pykrx.stock.stock_ohlcv._get_naver_market_ohlcv_by_date") as mock_naver:
             mock_df = pd.DataFrame(
                 {"시가": [100], "고가": [105], "저가": [95], "종가": [101], "거래량": [1000]},
                 index=pd.date_range(self.FROMDATE_DASH, periods=1),
@@ -118,7 +118,7 @@ class TestStockOHLCV:
     def test_get_market_ohlcv_by_date_with_name_display(self):
         """name_display 옵션 테스트"""
         with (
-            patch("pykrx.website.naver.get_market_ohlcv_by_date") as mock_naver,
+            patch("pykrx.stock.stock_ohlcv._get_naver_market_ohlcv_by_date") as mock_naver,
             patch("pykrx.stock.stock_ticker.get_market_ticker_name") as mock_ticker_name,
         ):
             mock_df = pd.DataFrame(
@@ -141,7 +141,7 @@ class TestStockOHLCV:
 
     def test_get_market_ohlcv_by_ticker(self):
         """티커별 OHLCV 조회 테스트"""
-        with patch("pykrx.website.krx.get_market_ohlcv_by_ticker") as mock_krx:
+        with patch("pykrx.stock.stock_ohlcv._get_market_ohlcv_by_ticker") as mock_krx:
             mock_df = pd.DataFrame(
                 {
                     "시가": [100, 101, 102],
@@ -167,8 +167,8 @@ class TestStockOHLCV:
     def test_get_market_ohlcv_by_ticker_with_datetime(self):
         """datetime 객체로 티커별 OHLCV 조회 테스트"""
         with (
-            patch("pykrx.website.krx.datetime2string") as mock_datetime2string,
-            patch("pykrx.website.krx.get_market_ohlcv_by_ticker") as mock_krx,
+            patch("pykrx.stock.stock_ohlcv.datetime2string") as mock_datetime2string,
+            patch("pykrx.stock.stock_ohlcv._get_market_ohlcv_by_ticker") as mock_krx,
         ):
             mock_datetime2string.return_value = self.FROMDATE
             mock_df = pd.DataFrame(
@@ -188,7 +188,7 @@ class TestStockOHLCV:
     def test_get_market_ohlcv_by_ticker_holiday_alternative(self):
         """휴일 대안 데이터 조회 테스트"""
         with (
-            patch("pykrx.stock.stock_ohlcv.krx.get_market_ohlcv_by_ticker") as mock_krx,
+            patch("pykrx.stock.stock_ohlcv._get_market_ohlcv_by_ticker") as mock_krx,
             patch(
                 "pykrx.stock.stock_ohlcv.get_nearest_business_day_in_a_week"
             ) as mock_business_day,

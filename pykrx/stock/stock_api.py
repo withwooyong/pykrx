@@ -41,7 +41,9 @@ from pykrx.website.krx.market.wrap import (
 from pykrx.website.krx.market.wrap import (
     get_exhaustion_rates_of_foreign_investment_by_ticker as _get_exhaustion_rates_of_foreign_investment_by_ticker,
 )
-from pykrx.website.krx.market.wrap import get_index_listing_date
+from pykrx.website.krx.market.wrap import (
+    get_index_listing_date as _get_index_listing_date,
+)
 from pykrx.website.krx.market.wrap import (
     get_index_ohlcv_by_date as _get_index_ohlcv_by_date,
 )
@@ -205,6 +207,18 @@ def get_index_price_change_by_ticker(
         DataFrame: 지수 가격 변동 데이터
     """
     return _get_index_price_change_by_ticker(fromdate, todate, market)
+
+
+def get_index_listing_date(market: str = "KOSPI") -> "DataFrame":
+    """지수 상장일 및 기준비수 조회
+
+    Args:
+        market (str, optional): 조회 시장 (KOSPI/KOSDAQ/KRX/테마). 기본값은 "KOSPI"
+
+    Returns:
+        DataFrame: 지수 상장일 및 기준비수 데이터
+    """
+    return _get_index_listing_date(market)
 
 
 # ETF/ETN/ELW 관련 wrapper 함수들
@@ -442,7 +456,11 @@ def get_market_trading_volume_by_investor(
 
     # 거래량 컬럼만 추출
     if isinstance(df.columns, pd.MultiIndex):
-        return cast("DataFrame", df["거래량"].to_frame())
+        result = df["거래량"]
+        # MultiIndex에서 선택하면 DataFrame이 반환되므로, Series인 경우에만 to_frame() 호출
+        if isinstance(result, pd.Series):
+            return cast("DataFrame", result.to_frame())
+        return cast("DataFrame", result)
     return df
 
 
@@ -479,7 +497,11 @@ def get_market_trading_value_by_investor(
 
     # 거래대금 컬럼만 추출
     if isinstance(df.columns, pd.MultiIndex):
-        return cast("DataFrame", df["거래대금"].to_frame())
+        result = df["거래대금"]
+        # MultiIndex에서 선택하면 DataFrame이 반환되므로, Series인 경우에만 to_frame() 호출
+        if isinstance(result, pd.Series):
+            return cast("DataFrame", result.to_frame())
+        return cast("DataFrame", result)
     return df
 
 
@@ -647,7 +669,11 @@ def get_shorting_volume_by_ticker(
 
     # 거래량 컬럼만 추출
     if isinstance(df.columns, pd.MultiIndex):
-        return cast("DataFrame", df["거래량"].to_frame())
+        result = df["거래량"]
+        # MultiIndex에서 선택하면 DataFrame이 반환되므로, Series인 경우에만 to_frame() 호출
+        if isinstance(result, pd.Series):
+            return cast("DataFrame", result.to_frame())
+        return cast("DataFrame", result)
     return df
 
 
@@ -671,7 +697,11 @@ def get_shorting_value_by_ticker(
 
     # 거래대금 컬럼만 추출
     if isinstance(df.columns, pd.MultiIndex):
-        return cast("DataFrame", df["거래대금"].to_frame())
+        result = df["거래대금"]
+        # MultiIndex에서 선택하면 DataFrame이 반환되므로, Series인 경우에만 to_frame() 호출
+        if isinstance(result, pd.Series):
+            return cast("DataFrame", result.to_frame())
+        return cast("DataFrame", result)
     return df
 
 
@@ -690,7 +720,11 @@ def get_shorting_volume_by_date(fromdate: str, todate: str, ticker: str) -> "Dat
 
     # 거래량 컬럼만 추출
     if isinstance(df.columns, pd.MultiIndex):
-        return cast("DataFrame", df["거래량"].to_frame())
+        result = df["거래량"]
+        # MultiIndex에서 선택하면 DataFrame이 반환되므로, Series인 경우에만 to_frame() 호출
+        if isinstance(result, pd.Series):
+            return cast("DataFrame", result.to_frame())
+        return cast("DataFrame", result)
     return df
 
 
@@ -709,7 +743,11 @@ def get_shorting_value_by_date(fromdate: str, todate: str, ticker: str) -> "Data
 
     # 거래대금 컬럼만 추출
     if isinstance(df.columns, pd.MultiIndex):
-        return cast("DataFrame", df["거래대금"].to_frame())
+        result = df["거래대금"]
+        # MultiIndex에서 선택하면 DataFrame이 반환되므로, Series인 경우에만 to_frame() 호출
+        if isinstance(result, pd.Series):
+            return cast("DataFrame", result.to_frame())
+        return cast("DataFrame", result)
     return df
 
 

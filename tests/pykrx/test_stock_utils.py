@@ -107,7 +107,8 @@ class TestStockUtils:
         print(f"    원본 데이터: {len(df)}행 (30일)")
 
         # 월별 데이터로 리샘플링
-        result = resample_ohlcv(df, "m", "sum")
+        how = {"시가": "first", "고가": "max", "저가": "min", "종가": "last", "거래량": "sum"}
+        result = resample_ohlcv(df, "m", how)
         print(f"    월별 리샘플링 결과: {len(result)}행")
 
         assert len(result) == 1  # 1개월 데이터
@@ -136,7 +137,8 @@ class TestStockUtils:
         print(f"    원본 데이터: {len(df)}행 (365일)")
 
         # 연별 데이터로 리샘플링
-        result = resample_ohlcv(df, "y", "sum")
+        how = {"시가": "first", "고가": "max", "저가": "min", "종가": "last", "거래량": "sum"}
+        result = resample_ohlcv(df, "y", how)
         print(f"    연별 리샘플링 결과: {len(result)}행")
 
         assert len(result) == 1  # 1년 데이터

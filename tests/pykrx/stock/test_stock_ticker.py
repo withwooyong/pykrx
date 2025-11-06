@@ -16,9 +16,9 @@ class TestStockTicker:
         """기본 파라미터로 티커 목록 조회 테스트"""
         with (
             patch(
-                "pykrx.stock.stock_business_days.get_nearest_business_day_in_a_week"
+                "pykrx.stock.stock_ticker.get_nearest_business_day_in_a_week"
             ) as mock_business_day,
-            patch("pykrx.website.krx.get_market_ticker_and_name") as mock_krx,
+            patch("pykrx.stock.stock_ticker.get_market_ticker_and_name") as mock_krx,
         ):
             # Mock 데이터 설정
             mock_business_day.return_value = "20240115"
@@ -43,7 +43,7 @@ class TestStockTicker:
 
     def test_get_market_ticker_list_with_date(self):
         """날짜를 지정하여 티커 목록 조회 테스트"""
-        with patch("pykrx.website.krx.get_market_ticker_and_name") as mock_krx:
+        with patch("pykrx.stock.stock_ticker.get_market_ticker_and_name") as mock_krx:
             mock_df = pd.DataFrame(
                 {"종목명": ["삼성전자", "SK하이닉스"]},
                 index=pd.Index(["005930", "000660"]),
@@ -59,9 +59,9 @@ class TestStockTicker:
         """시장을 지정하여 티커 목록 조회 테스트"""
         with (
             patch(
-                "pykrx.stock.stock_business_days.get_nearest_business_day_in_a_week"
+                "pykrx.stock.stock_ticker.get_nearest_business_day_in_a_week"
             ) as mock_business_day,
-            patch("pykrx.website.krx.get_market_ticker_and_name") as mock_krx,
+            patch("pykrx.stock.stock_ticker.get_market_ticker_and_name") as mock_krx,
         ):
             mock_business_day.return_value = "20240115"
             mock_df = pd.DataFrame(
@@ -79,9 +79,9 @@ class TestStockTicker:
         """전체 시장 티커 목록 조회 테스트"""
         with (
             patch(
-                "pykrx.stock.stock_business_days.get_nearest_business_day_in_a_week"
+                "pykrx.stock.stock_ticker.get_nearest_business_day_in_a_week"
             ) as mock_business_day,
-            patch("pykrx.website.krx.get_market_ticker_and_name") as mock_krx,
+            patch("pykrx.stock.stock_ticker.get_market_ticker_and_name") as mock_krx,
         ):
             mock_business_day.return_value = "20240115"
             mock_df = pd.DataFrame(
@@ -97,7 +97,7 @@ class TestStockTicker:
 
     def test_get_market_ticker_name(self):
         """티커로 종목명 조회 테스트"""
-        with patch("pykrx.website.krx.get_stock_name") as mock_krx:
+        with patch("pykrx.stock.stock_ticker.get_stock_name") as mock_krx:
             mock_krx.return_value = "삼성전자"
 
             result = get_market_ticker_name("005930")
@@ -107,7 +107,7 @@ class TestStockTicker:
 
     def test_get_market_ticker_name_multiple_calls(self):
         """여러 번의 티커명 조회 테스트"""
-        with patch("pykrx.website.krx.get_stock_name") as mock_krx:
+        with patch("pykrx.stock.stock_ticker.get_stock_name") as mock_krx:
             mock_krx.side_effect = ["삼성전자", "SK하이닉스", "LG에너지솔루션"]
 
             result1 = get_market_ticker_name("005930")
@@ -125,9 +125,9 @@ class TestStockTicker:
         """빈 결과 반환 테스트"""
         with (
             patch(
-                "pykrx.stock.stock_business_days.get_nearest_business_day_in_a_week"
+                "pykrx.stock.stock_ticker.get_nearest_business_day_in_a_week"
             ) as mock_business_day,
-            patch("pykrx.website.krx.get_market_ticker_and_name") as mock_krx,
+            patch("pykrx.stock.stock_ticker.get_market_ticker_and_name") as mock_krx,
         ):
             mock_business_day.return_value = "20240115"
             mock_df = pd.DataFrame()
@@ -140,7 +140,7 @@ class TestStockTicker:
 
     def test_get_market_ticker_list_datetime_input(self):
         """datetime 객체 입력 테스트"""
-        with patch("pykrx.website.krx.get_market_ticker_and_name") as mock_krx:
+        with patch("pykrx.stock.stock_ticker.get_market_ticker_and_name") as mock_krx:
             test_date = datetime.datetime(2024, 1, 15)
 
             mock_df = pd.DataFrame({"종목명": ["테스트종목"]}, index=pd.Index(["123456"]))

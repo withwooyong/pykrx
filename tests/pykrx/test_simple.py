@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-"""간단한 테스트 스크립트 - pykrx 설치 없이 실행"""
-
 import os
 import sys
 

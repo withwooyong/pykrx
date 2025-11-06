@@ -18,7 +18,7 @@ class TestStockMarketCap:
 
     def test_get_market_cap_by_date_with_string_dates(self):
         """문자열 날짜로 시가총액 조회 테스트"""
-        with patch("pykrx.website.krx.get_market_cap_by_date") as mock_krx:
+        with patch("pykrx.stock.stock_market_cap._get_market_cap_by_date") as mock_krx:
             # Mock 데이터 생성
             mock_df = pd.DataFrame(
                 {
@@ -46,8 +46,8 @@ class TestStockMarketCap:
     def test_get_market_cap_by_date_with_datetime_dates(self):
         """datetime 객체로 시가총액 조회 테스트"""
         with (
-            patch("pykrx.website.krx.datetime2string") as mock_datetime2string,
-            patch("pykrx.website.krx.get_market_cap_by_date") as mock_krx,
+            patch("pykrx.stock.stock_market_cap.datetime2string") as mock_datetime2string,
+            patch("pykrx.stock.stock_market_cap._get_market_cap_by_date") as mock_krx,
         ):
             mock_datetime2string.side_effect = ["20240115", "20240116"]
 
@@ -72,7 +72,7 @@ class TestStockMarketCap:
 
     def test_get_market_cap_by_date_with_dash_dates(self):
         """하이픈이 포함된 날짜로 시가총액 조회 테스트"""
-        with patch("pykrx.website.krx.get_market_cap_by_date") as mock_krx:
+        with patch("pykrx.stock.stock_market_cap._get_market_cap_by_date") as mock_krx:
             mock_df = pd.DataFrame(
                 {
                     "시가총액": [1000000],
@@ -91,7 +91,7 @@ class TestStockMarketCap:
 
     def test_get_market_cap_by_date_with_freq(self):
         """주기별 시가총액 조회 테스트"""
-        with patch("pykrx.website.krx.get_market_cap_by_date") as mock_krx:
+        with patch("pykrx.stock.stock_market_cap._get_market_cap_by_date") as mock_krx:
             # 월별 데이터로 리샘플링 테스트
             mock_df = pd.DataFrame(
                 {
@@ -115,7 +115,7 @@ class TestStockMarketCap:
 
     def test_get_market_cap_by_ticker(self):
         """티커별 시가총액 조회 테스트"""
-        with patch("pykrx.website.krx.get_market_cap_by_ticker") as mock_krx:
+        with patch("pykrx.stock.stock_market_cap._get_market_cap_by_ticker") as mock_krx:
             mock_df = pd.DataFrame(
                 {
                     "종가": [100, 101, 102],
@@ -136,7 +136,7 @@ class TestStockMarketCap:
 
     def test_get_market_cap_by_ticker_with_ascending(self):
         """오름차순 정렬로 시가총액 조회 테스트"""
-        with patch("pykrx.website.krx.get_market_cap_by_ticker") as mock_krx:
+        with patch("pykrx.stock.stock_market_cap._get_market_cap_by_ticker") as mock_krx:
             mock_df = pd.DataFrame(
                 {
                     "종가": [100, 101, 102],
@@ -156,8 +156,8 @@ class TestStockMarketCap:
     def test_get_market_cap_by_ticker_with_datetime(self):
         """datetime 객체로 티커별 시가총액 조회 테스트"""
         with (
-            patch("pykrx.website.krx.datetime2string") as mock_datetime2string,
-            patch("pykrx.website.krx.get_market_cap_by_ticker") as mock_krx,
+            patch("pykrx.stock.stock_market_cap.datetime2string") as mock_datetime2string,
+            patch("pykrx.stock.stock_market_cap._get_market_cap_by_ticker") as mock_krx,
         ):
             mock_datetime2string.return_value = "20240115"
             mock_df = pd.DataFrame(
@@ -180,7 +180,7 @@ class TestStockMarketCap:
     def test_get_market_cap_by_ticker_holiday_alternative(self):
         """휴일 대안 데이터 조회 테스트"""
         with (
-            patch("pykrx.stock.stock_market_cap.krx.get_market_cap_by_ticker") as mock_krx,
+            patch("pykrx.stock.stock_market_cap._get_market_cap_by_ticker") as mock_krx,
             patch(
                 "pykrx.stock.stock_market_cap.get_nearest_business_day_in_a_week"
             ) as mock_business_day,
@@ -249,7 +249,7 @@ class TestStockMarketCap:
 
     def test_get_market_cap_by_ticker_market_validation(self):
         """시장 유효성 검사 테스트"""
-        with patch("pykrx.website.krx.get_market_cap_by_ticker") as mock_krx:
+        with patch("pykrx.stock.stock_market_cap._get_market_cap_by_ticker") as mock_krx:
             mock_df = pd.DataFrame(
                 {
                     "종가": [100],

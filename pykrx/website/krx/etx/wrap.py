@@ -203,7 +203,8 @@ def get_etf_portfolio_deposit_file(date: str, ticker: str) -> DataFrame:
     # - empty string은 int, float로 형변환 불가
     #  -> 이 문제를 해결하기 위해 '-' 문자는 0으로 치환
     df = df.replace(r"\-$", "0", regex=True)
-    df = df.astype({"계약수": np.float64, "금액": np.uint64, "비중": np.float32})
+    # 금액은 음수 값이 있을 수 있으므로 int64 사용
+    df = df.astype({"계약수": np.float64, "금액": np.int64, "비중": np.float32})
     df = df[(df.T != 0).any()]
     return cast(DataFrame, df)
 

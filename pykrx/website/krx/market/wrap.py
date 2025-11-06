@@ -236,7 +236,10 @@ def get_market_cap_by_ticker(
 
     df = df.set_index("티커")
     df = df.replace(r"\W", "", regex=True)
-    df = df.replace("", 0)
+    # pandas FutureWarning 해결: replace 대신 mask 사용
+    for col in df.columns:
+        df[col] = df[col].mask(df[col] == "", 0)
+    df = df.infer_objects(copy=False)
     df = df.astype(np.int64)
     return df.sort_values("시가총액", ascending=ascending)
 
@@ -1084,14 +1087,18 @@ def get_index_price_change_by_ticker(fromdate: str, todate: str, market: str) ->
     df = df.set_index("지수명")
     df = df.replace(r"[^\w\.-]", "", regex=True)
     df = df.replace("", 0)
-    df = df.replace("-", 0)
+    # pandas FutureWarning 해결: replace 대신 mask 사용
+    for col in df.columns:
+        df[col] = df[col].mask(df[col] == "-", 0)
+    df = df.infer_objects(copy=False)
+    # 큰 정수 값 처리: pd.to_numeric을 사용하여 overflow 경고 방지
+    for col in ["거래량", "거래대금"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(np.int64)
     df = df.astype(
         {
             "시가": np.float64,
             "종가": np.float64,
             "등락률": np.float16,
-            "거래량": np.int64,
-            "거래대금": np.int64,
         }
     )
     return df

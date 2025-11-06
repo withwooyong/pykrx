@@ -51,7 +51,9 @@ class TestStockBusinessDays:
         """연도와 월로 영업일 조회 테스트"""
         print("  📅 연도/월로 영업일 조회 테스트 실행 중...")
 
-        with patch("pykrx.website.krx.get_market_ohlcv_by_date") as mock_krx:
+        with patch(
+            "pykrx.stock.stock_business_days.krx.get_market_ohlcv_by_date", create=True
+        ) as mock_krx:
             # Mock 데이터 생성
             mock_dates = pd.date_range("2024-01-01", periods=31, freq="D")
             mock_df = pd.DataFrame(index=mock_dates)
@@ -73,7 +75,9 @@ class TestStockBusinessDays:
         """날짜 범위로 영업일 조회 테스트"""
         print("  📅 날짜 범위로 영업일 조회 테스트 실행 중...")
 
-        with patch("pykrx.website.krx.get_market_ohlcv_by_date") as mock_krx:
+        with patch(
+            "pykrx.stock.stock_business_days.krx.get_market_ohlcv_by_date", create=True
+        ) as mock_krx:
             # Mock 데이터 생성
             mock_dates = pd.date_range("2024-01-01", periods=15, freq="D")
             mock_df = pd.DataFrame(index=mock_dates)
@@ -105,7 +109,9 @@ class TestStockBusinessDays:
         """12월 경계 케이스 테스트"""
         print("  📅 12월 경계 케이스 테스트 실행 중...")
 
-        with patch("pykrx.website.krx.get_market_ohlcv_by_date") as mock_krx:
+        with patch(
+            "pykrx.stock.stock_business_days.krx.get_market_ohlcv_by_date", create=True
+        ) as mock_krx:
             mock_dates = pd.date_range("2024-12-01", periods=31, freq="D")
             mock_df = pd.DataFrame(index=mock_dates)
             mock_krx.return_value = mock_df
@@ -138,7 +144,9 @@ class TestStockBusinessDays:
         """영업일 월별 필터링 테스트"""
         print("  🔍 월별 필터링 테스트 실행 중...")
 
-        with patch("pykrx.website.krx.get_market_ohlcv_by_date") as mock_krx:
+        with patch(
+            "pykrx.stock.stock_business_days.krx.get_market_ohlcv_by_date", create=True
+        ) as mock_krx:
             # 1월과 2월 데이터가 섞인 Mock 데이터 생성
             mock_dates = pd.date_range("2024-01-01", periods=60, freq="D")
             mock_df = pd.DataFrame(index=mock_dates)
@@ -153,3 +161,14 @@ class TestStockBusinessDays:
                 assert date.month == 1
 
             print("  ✅ 월별 필터링 테스트 성공")
+
+
+if __name__ == "__main__":
+    test = TestStockBusinessDays()
+    test.test_get_nearest_business_day_in_a_week()
+    test.test_get_previous_business_days_by_year_month()
+    test.test_get_previous_business_days_by_date_range()
+    test.test_get_previous_business_days_invalid_params()
+    test.test_get_previous_business_days_december_edge_case()
+    test.test_get_business_days_deprecated()
+    test.test_business_days_month_filtering()

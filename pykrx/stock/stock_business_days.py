@@ -2,7 +2,7 @@
 주식 영업일 관련 함수들
 """
 
-from pykrx.website import krx
+from pykrx.website.krx.market.wrap import get_market_ohlcv_by_date
 
 
 def get_nearest_business_day_in_a_week(date: str | None = None, prev: bool = True) -> str:
@@ -15,21 +15,22 @@ def get_nearest_business_day_in_a_week(date: str | None = None, prev: bool = Tru
     Returns:
         str: 날짜 (YYMMDD)
     """
-    return krx.get_nearest_business_day_in_a_week(date, prev)  # type: ignore
+    from pykrx.website.krx import get_nearest_business_day_in_a_week as _get_nearest_business_day_in_a_week
+    return _get_nearest_business_day_in_a_week(date, prev)
 
 
 def __get_business_days_0(year: int, month: int):
     """연도와 월로 영업일 조회 (내부 함수)"""
     strt = f"{year}{month:02}01"
     last = f"{year + 1}0101" if month == 12 else f"{year}{month + 1:02}01"
-    df = krx.get_market_ohlcv_by_date(strt, last, "000020")  # type: ignore
+    df = get_market_ohlcv_by_date(strt, last, "000020")  # type: ignore
     cond = df.index.month[0] == df.index.month  # type: ignore
     return df.index[cond].to_list()
 
 
 def __get_business_days_1(strt: str, last: str):
     """시작일과 종료일로 영업일 조회 (내부 함수)"""
-    df = krx.get_market_ohlcv_by_date(strt, last, "000020")  # type: ignore
+    df = get_market_ohlcv_by_date(strt, last, "000020")  # type: ignore
     return df.index.to_list()
 
 

@@ -49,9 +49,9 @@ def resample_ohlcv(df, freq, how):
     """
     if freq != "d" and len(df) > 0:
         if freq == "m":
-            df = df.resample("M").apply(how)
+            df = df.resample("ME").apply(how)  # 'M' is deprecated, use 'ME' instead
         elif freq == "y":
-            df = df.resample("Y").apply(how)
+            df = df.resample("YE").apply(how)  # 'Y' is deprecated, use 'YE' instead
         else:
             print("choose a freq parameter in ('m', 'y', 'd')")
             raise RuntimeError
